@@ -6,3 +6,8 @@
 - [x] Create and configure unique Jernih Brantas app branding assets.
 - [x] Validate types, linting, and primary flows before delivery.
 - [x] Support portrait and landscape orientations with adaptive app layouts.
+- [x] Compare the lowest-cost turbidity measurement options for the planned sensor integration.
+- [x] Review and prioritize front-end UI/UX improvements before hardware and backend integration.
+- [x] Draft HTML/CSS updates for Field Mode and the Data Trust strip.
+- [x] Implement Field Mode and Data Trust in the Jernih mobile app.
+- [x] Validate Field Mode, measurement review, and Data Trust states on the updated mobile interface.

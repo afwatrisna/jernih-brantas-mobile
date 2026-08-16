@@ -11,7 +11,7 @@ export type StationState = Station & {
   ntu: number;
 };
 
-export type ReadingSource = "sensor" | "manual";
+export type ReadingSource = "sensor" | "manual" | "simulation";
 
 export type Reading = {
   id: string;
@@ -106,7 +106,12 @@ export function sanitizeHistory(value: unknown): HistoryByStation {
           ntu: Math.round(ntu * 10) / 10,
           waktu: typeof entry.waktu === "string" ? entry.waktu : formatTime(timestamp),
           ts: timestamp,
-          sumber: entry.sumber === "manual" ? "manual" : "sensor",
+          sumber:
+            entry.sumber === "manual"
+              ? "manual"
+              : entry.sumber === "simulation" || (entry.sumber === "sensor" && entry.alat === "Sensor NTU-Logger V2")
+                ? "simulation"
+                : "sensor",
           alat: typeof entry.alat === "string" ? entry.alat : "Sensor NTU-Logger V2",
         } satisfies Reading;
       })

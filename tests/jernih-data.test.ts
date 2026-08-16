@@ -29,4 +29,16 @@ describe("Jernih local-history recovery", () => {
     expect(history.malang[1].ntu).toBe(13.5);
     expect(history.kediri).toBeUndefined();
   });
+
+  it("preserves explicit simulation entries and migrates legacy simulated logger entries", () => {
+    const history = sanitizeHistory({
+      malang: [
+        { id: "explicit", ntu: 10, ts: 100, sumber: "simulation", alat: "Sensor NTU-Logger V2", waktu: "09.00" },
+        { id: "legacy", ntu: 11, ts: 200, sumber: "sensor", alat: "Sensor NTU-Logger V2", waktu: "09.05" },
+        { id: "real", ntu: 12, ts: 300, sumber: "sensor", alat: "DFRobot SEN0189", waktu: "09.10" },
+      ],
+    });
+
+    expect(history.malang.map((entry) => entry.sumber)).toEqual(["simulation", "simulation", "sensor"]);
+  });
 });

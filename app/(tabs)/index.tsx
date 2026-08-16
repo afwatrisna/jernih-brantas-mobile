@@ -41,6 +41,7 @@ type Section = "home" | "stations" | "measure" | "analytics" | "settings";
 type Sheet = "station" | "formStation" | "equipment" | "reset" | null;
 type AnalyticsMode = "trend" | "history";
 type Range = "24H" | "7H" | "30H" | "Semua";
+type MeasurementStep = "entry" | "review";
 type ToastTone = "success" | "warning" | "neutral";
 type Toast = { text: string; tone: ToastTone } | null;
 
@@ -53,7 +54,7 @@ const RANGE_MS: Record<Exclude<Range, "Semua">, number> = {
 const NAV_ITEMS: { key: Section; label: string; icon: React.ComponentProps<typeof MaterialIcons>["name"] }[] = [
   { key: "home", label: "Beranda", icon: "home-filled" },
   { key: "stations", label: "Stasiun", icon: "place" },
-  { key: "measure", label: "Ukur", icon: "add" },
+  { key: "measure", label: "Field", icon: "add" },
   { key: "analytics", label: "Analitik", icon: "insert-chart" },
   { key: "settings", label: "Atur", icon: "settings" },
 ];
@@ -73,6 +74,42 @@ function valueTrend(readings: Reading[]) {
 function lastReading(history: HistoryByStation, stationId: string) {
   const readings = history[stationId] ?? [];
   return readings[readings.length - 1];
+}
+
+function sourceLabel(source: Reading["sumber"] | undefined) {
+  if (source === "manual") return "Input manual";
+  if (source === "simulation") return "Simulasi";
+  if (source === "sensor") return "Sensor";
+  return "Belum ada data";
+}
+
+function DataTrustStrip({ reading }: { reading?: Reading }) {
+  const source = reading?.sumber;
+  const isManual = source === "manual";
+  const isSimulation = source === "simulation";
+  const ageMinutes = reading ? Math.max(0, Math.floor((Date.now() - reading.ts) / 60000)) : null;
+  const freshness = !reading ? "Menunggu pembacaan" : ageMinutes === 0 ? "Baru diperbarui" : `${ageMinutes} mnt lalu`;
+  const tone = isManual ? "warning" : isSimulation ? "info" : source === "sensor" ? "good" : "muted";
+  const validation = isManual || isSimulation ? "Perlu verifikasi" : source === "sensor" ? "Siap ditinjau" : "Belum tersedia";
+
+  return (
+    <View style={styles.dataTrust} accessibilityLabel={`Data Trust. Sumber ${sourceLabel(source)}. ${freshness}. ${validation}.`}>
+      <View style={styles.dataTrustHeader}>
+        <Text style={styles.dataTrustKicker}>DATA TRUST</Text>
+        <View style={[styles.trustBadge, tone === "warning" && styles.trustBadgeWarning, tone === "info" && styles.trustBadgeInfo, tone === "muted" && styles.trustBadgeMuted]}>
+          <View style={[styles.trustBadgeDot, tone === "warning" && styles.trustBadgeDotWarning, tone === "info" && styles.trustBadgeDotInfo, tone === "muted" && styles.trustBadgeDotMuted]} />
+          <Text style={[styles.trustBadgeText, tone === "warning" && styles.trustBadgeTextWarning, tone === "info" && styles.trustBadgeTextInfo, tone === "muted" && styles.trustBadgeTextMuted]}>{sourceLabel(source).toUpperCase()}</Text>
+        </View>
+      </View>
+      <View style={styles.dataTrustGrid}>
+        <View style={styles.trustMetric}><Text style={styles.trustMetricLabel}>PEMBARUAN</Text><Text style={styles.trustMetricValue}>{freshness}</Text></View>
+        <View style={styles.trustMetric}><Text style={styles.trustMetricLabel}>SUMBER</Text><Text style={styles.trustMetricValue} numberOfLines={1}>{reading?.alat ?? "Belum terhubung"}</Text></View>
+        <View style={styles.trustMetric}><Text style={styles.trustMetricLabel}>VALIDASI</Text><Text style={[styles.trustMetricValue, (isManual || isSimulation) && styles.trustMetricWarning]}>{validation}</Text></View>
+        <View style={styles.trustMetric}><Text style={styles.trustMetricLabel}>PENYIMPANAN</Text><Text style={styles.trustMetricValue}>Lokal</Text></View>
+      </View>
+      {(isManual || isSimulation) ? <Text style={styles.dataTrustNotice}>{isSimulation ? "Nilai simulasi hanya untuk demonstrasi dan bukan data lingkungan resmi." : "Pembacaan manual perlu diverifikasi dengan alat referensi atau prosedur kalibrasi."}</Text> : null}
+    </View>
+  );
 }
 
 function WaterStatusCard({ station, readings, simulation, landscape }: { station: StationState; readings: Reading[]; simulation: boolean; landscape: boolean }) {
@@ -236,6 +273,7 @@ export default function HomeScreen() {
   const [measureStationId, setMeasureStationId] = useState("malang");
   const [measureNtu, setMeasureNtu] = useState("");
   const [measureEquipment, setMeasureEquipment] = useState<(typeof EQUIPMENT)[number]>(EQUIPMENT[0]);
+  const [measurementStep, setMeasurementStep] = useState<MeasurementStep>("entry");
   const [analyticsMode, setAnalyticsMode] = useState<AnalyticsMode>("trend");
   const [range, setRange] = useState<Range>("Semua");
   const [toast, setToast] = useState<Toast>(null);
@@ -297,7 +335,7 @@ export default function HomeScreen() {
           const estimated = station.ntu + noise + spike;
           const nudged = estimated + (station.baseline - estimated) * 0.04;
           const ntu = Math.max(1.2, Math.round(nudged * 10) / 10);
-          entries[station.id] = createReading(ntu, "sensor", "Sensor NTU-Logger V2");
+          entries[station.id] = createReading(ntu, "simulation", "Sensor NTU-Logger V2");
           return { ...station, ntu };
         });
         return next;
@@ -309,6 +347,7 @@ export default function HomeScreen() {
 
   const activeStation = stations.find((station) => station.id === activeId) ?? stations[0];
   const activeHistory = useMemo(() => history[activeStation.id] ?? [], [history, activeStation.id]);
+  const activeLatestReading = activeHistory[activeHistory.length - 1];
   const allReadings = useMemo(() => Object.values(history).flat(), [history]);
   const averageRiver = stations.reduce((total, station) => total + station.ntu, 0) / stations.length;
   const compliantStations = stations.filter((station) => station.ntu <= 25).length;
@@ -323,9 +362,23 @@ export default function HomeScreen() {
 
   const navigate = useCallback((destination: Section) => {
     haptic.light();
-    if (destination === "measure") setMeasureStationId(activeId);
+    if (destination === "measure") {
+      setMeasureStationId(activeId);
+      setMeasurementStep("entry");
+    }
     setSection(destination);
   }, [activeId]);
+
+  const prepareMeasurementReview = useCallback(() => {
+    const parsed = Number.parseFloat(measureNtu.replace(",", "."));
+    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 500) {
+      haptic.error();
+      showToast("Nilai NTU harus berada antara 0–500 sebelum ditinjau.", "warning");
+      return;
+    }
+    haptic.light();
+    setMeasurementStep("review");
+  }, [measureNtu, showToast]);
 
   const submitMeasurement = useCallback(() => {
     const parsed = Number.parseFloat(measureNtu.replace(",", "."));
@@ -339,6 +392,7 @@ export default function HomeScreen() {
     setStations((current) => current.map((station) => station.id === measureStationId ? { ...station, ntu: reading.ntu } : station));
     setActiveId(measureStationId);
     setMeasureNtu("");
+    setMeasurementStep("entry");
     haptic.success();
     const station = INITIAL_STATIONS.find((item) => item.id === measureStationId);
     showToast(`Pengukuran tersimpan · ${station?.name ?? "Stasiun"}`, "success");
@@ -352,6 +406,7 @@ export default function HomeScreen() {
     setStations(initialStationStates());
     setActiveId("malang");
     setMeasureStationId("malang");
+    setMeasurementStep("entry");
     setSheet(null);
     haptic.success();
     showToast("Semua riwayat pengukuran telah direset.", "success");
@@ -378,12 +433,13 @@ export default function HomeScreen() {
   const renderHome = () => (
     <ScrollView contentContainerStyle={[styles.scrollContent, isLandscape && styles.scrollContentLandscape]} showsVerticalScrollIndicator={false}>
       <View style={styles.introBlock}>
-        <Text style={styles.eyebrow}>PEMANTAUAN KEJERNIHAN</Text>
+        <View style={styles.workspaceMode}><MaterialIcons name="visibility" size={13} color="#2D6A5C" /><Text style={styles.workspaceModeText}>MONITOR MODE</Text></View>
         <Text style={styles.pageDisplay}>Kondisi sungai{`\n`}saat ini.</Text>
-        <Text style={styles.introCopy}>Pantau titik-titik penting Sungai Brantas dan catat pembacaan lapangan dalam satu alur yang ringkas.</Text>
+        <Text style={styles.introCopy}>Pantau titik-titik penting Sungai Brantas. Gunakan Field Mode untuk mencatat pembacaan lapangan secara terstruktur.</Text>
       </View>
       <StationSelector stations={stations} activeId={activeId} onSelect={selectStation} />
       <WaterStatusCard station={activeStation} readings={activeHistory} simulation={simulation} landscape={isLandscape} />
+      <DataTrustStrip reading={activeLatestReading} />
 
       <View style={styles.metricGrid}>
         <MetricTile value={`${formatNtu(averageRiver)}`} label="Rata-rata sungai" />
@@ -467,20 +523,41 @@ export default function HomeScreen() {
   );
 
   const selectedMeasureStation = stations.find((station) => station.id === measureStationId) ?? stations[0];
+  const selectedMeasureHistory = history[measureStationId] ?? [];
+  const selectedMeasureLatest = selectedMeasureHistory[selectedMeasureHistory.length - 1];
   const measurementValue = Number.parseFloat(measureNtu.replace(",", "."));
   const measurementInvalid = measureNtu.length > 0 && (!Number.isFinite(measurementValue) || measurementValue < 0 || measurementValue > 500);
+  const measurementClass = Number.isFinite(measurementValue) && !measurementInvalid ? classifyNtu(measurementValue) : null;
 
   const renderMeasure = () => (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.select({ ios: "padding", default: undefined })}>
       <ScrollView contentContainerStyle={[styles.scrollContent, isLandscape && styles.scrollContentLandscape]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View style={[styles.measurementShell, isLandscape && styles.measurementShellLandscape]}>
         <View style={[styles.introBlock, isLandscape && styles.measurementIntroLandscape]}>
-          <Text style={styles.eyebrow}>PENGUKURAN MANUAL</Text>
+          <View style={styles.workspaceMode}><MaterialIcons name="edit-note" size={13} color="#2D6A5C" /><Text style={styles.workspaceModeText}>FIELD MODE</Text></View>
           <Text style={styles.pageDisplay}>Catat hasil{`\n`}lapangan.</Text>
-          <Text style={styles.introCopy}>Pembacaan tersimpan hanya di perangkat ini dan langsung memperbarui riwayat stasiun.</Text>
+          <Text style={styles.introCopy}>Gunakan alur pilih titik, masukkan NTU, lalu tinjau sebelum menyimpan pembacaan lokal.</Text>
+          <View style={styles.fieldSteps}>
+            {[["1", "Titik"], ["2", "NTU"], ["3", "Tinjau"]].map(([number, label], index) => <View key={number} style={[styles.fieldStep, (measurementStep === "review" ? index <= 2 : index === 0) && styles.fieldStepActive]}><Text style={[styles.fieldStepNumber, (measurementStep === "review" ? index <= 2 : index === 0) && styles.fieldStepNumberActive]}>{number}</Text><Text style={[styles.fieldStepText, (measurementStep === "review" ? index <= 2 : index === 0) && styles.fieldStepTextActive]}>{label}</Text></View>)}
+          </View>
+          <DataTrustStrip reading={selectedMeasureLatest} />
         </View>
 
-        <View style={[styles.measurementCard, isLandscape && styles.measurementCardLandscape]}>
+        {measurementStep === "review" ? (
+          <View style={[styles.measurementReviewCard, isLandscape && styles.measurementCardLandscape]}>
+            <View style={styles.reviewIcon}><MaterialIcons name="fact-check" size={25} color="#2D6A5C" /></View>
+            <Text style={styles.reviewTitle}>Tinjau sebelum simpan</Text>
+            <Text style={styles.reviewBody}>Pastikan titik, alat, dan nilai sesuai dengan pembacaan turbidimeter lapangan.</Text>
+            <View style={styles.reviewSummary}>
+              <View style={styles.reviewSummaryRow}><Text style={styles.reviewSummaryLabel}>STASIUN</Text><Text style={styles.reviewSummaryValue}>{selectedMeasureStation.name}</Text></View>
+              <View style={styles.reviewSummaryRow}><Text style={styles.reviewSummaryLabel}>ALAT</Text><Text style={styles.reviewSummaryValue}>{measureEquipment}</Text></View>
+              <View style={styles.reviewSummaryRow}><Text style={styles.reviewSummaryLabel}>NILAI</Text><Text style={styles.reviewValue}>{formatNtu(measurementValue)} NTU</Text></View>
+              <View style={styles.reviewSummaryRow}><Text style={styles.reviewSummaryLabel}>KLASIFIKASI</Text><Text style={[styles.reviewSummaryValue, { color: measurementClass?.color }]}>{measurementClass?.label} · Kelas {measurementClass?.grade}</Text></View>
+            </View>
+            <View style={styles.reviewWarning}><MaterialIcons name="info-outline" size={16} color="#A84D22" /><Text style={styles.reviewWarningText}>Input manual perlu diverifikasi terhadap prosedur kalibrasi sebelum dipakai sebagai data resmi.</Text></View>
+            <View style={styles.reviewActions}><Pressable onPress={() => { haptic.selection(); setMeasurementStep("entry"); }} style={({ pressed }) => [styles.reviewSecondaryAction, pressed && styles.pressed]} accessibilityRole="button"><Text style={styles.reviewSecondaryText}>Ubah</Text></Pressable><Pressable onPress={submitMeasurement} style={({ pressed }) => [styles.reviewPrimaryAction, pressed && styles.pressed]} accessibilityRole="button"><Text style={styles.reviewPrimaryText}>Simpan lokal</Text><MaterialIcons name="check" size={18} color="#FFFDF8" /></Pressable></View>
+          </View>
+        ) : <View style={[styles.measurementCard, isLandscape && styles.measurementCardLandscape]}>
           <Text style={styles.formLabel}>STASIUN</Text>
           <Pressable onPress={() => setSheet("formStation")} style={({ pressed }) => [styles.selectControl, pressed && styles.pressed]} accessibilityRole="button">
             <View>
@@ -513,15 +590,17 @@ export default function HomeScreen() {
             <MaterialIcons name="expand-more" size={24} color="#E0ECE5" />
           </Pressable>
 
-          <Pressable onPress={submitMeasurement} style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]} accessibilityRole="button">
-            <MaterialIcons name="save" size={19} color="#17302B" />
-            <Text style={styles.saveButtonText}>Simpan pengukuran</Text>
+          {measurementClass ? <View style={[styles.measurementPreview, { backgroundColor: measurementClass.softColor }]}><View style={[styles.measurementPreviewDot, { backgroundColor: measurementClass.color }]} /><View style={styles.flex}><Text style={[styles.measurementPreviewTitle, { color: measurementClass.color }]}>{formatNtu(measurementValue)} NTU · {measurementClass.label}</Text><Text style={[styles.measurementPreviewBody, { color: measurementClass.color }]}>Kelas {measurementClass.grade} · tinjau sebelum menyimpan</Text></View></View> : null}
+          <Pressable onPress={prepareMeasurementReview} style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]} accessibilityRole="button">
+            <MaterialIcons name="fact-check" size={19} color="#17302B" />
+            <Text style={styles.saveButtonText}>Tinjau pengukuran</Text>
           </Pressable>
           <View style={styles.formFootnote}>
             <MaterialIcons name="info-outline" size={15} color="#A7C3B5" />
             <Text style={styles.formFootnoteText}>Waktu, sumber, ID, dan klasifikasi dibuat otomatis saat pengukuran disimpan.</Text>
           </View>
         </View>
+        }
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -583,7 +662,7 @@ export default function HomeScreen() {
                 </View>
                 <View style={styles.historyMeta}>
                   <Text style={[styles.historyStatus, { color: waterClass.color }]}>{waterClass.label} · Kelas {waterClass.grade}</Text>
-                  <Text style={styles.historySource}>{reading.sumber === "manual" ? "Manual" : "Sensor simulasi"}</Text>
+                  <Text style={styles.historySource}>{sourceLabel(reading.sumber)}</Text>
                 </View>
                 <Text style={styles.historyEquipment}>{reading.alat}</Text>
               </View>
@@ -826,6 +905,29 @@ const styles = StyleSheet.create({
   eyebrow: { color: "#4C8B7A", fontFamily: "monospace", fontSize: 10, fontWeight: "700", letterSpacing: 1.3, marginBottom: 8 },
   pageDisplay: { color: "#17302B", fontFamily: Platform.select({ ios: "Georgia", default: "serif" }), fontSize: 30, fontWeight: "700", letterSpacing: -0.5, lineHeight: 34 },
   introCopy: { color: "#68756D", fontSize: 13, lineHeight: 20, marginTop: 10, maxWidth: 390 },
+  workspaceMode: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 999, backgroundColor: "#E4EFEA", marginBottom: 10 },
+  workspaceModeText: { color: "#2D6A5C", fontFamily: "monospace", fontSize: 9, fontWeight: "700", letterSpacing: 0.7 },
+  dataTrust: { borderWidth: 1, borderColor: "#CDE0D5", borderRadius: 18, backgroundColor: "#F0F7F2", padding: 14 },
+  dataTrustHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 11 },
+  dataTrustKicker: { color: "#477261", fontFamily: "monospace", fontSize: 10, fontWeight: "700", letterSpacing: 1 },
+  trustBadge: { paddingHorizontal: 9, paddingVertical: 6, borderRadius: 999, backgroundColor: "#DCEBE5", flexDirection: "row", alignItems: "center", gap: 5 },
+  trustBadgeWarning: { backgroundColor: "#F6E2D6" },
+  trustBadgeInfo: { backgroundColor: "#E3EEF1" },
+  trustBadgeMuted: { backgroundColor: "#E6E5DF" },
+  trustBadgeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#2D6A5C" },
+  trustBadgeDotWarning: { backgroundColor: "#C4622D" },
+  trustBadgeDotInfo: { backgroundColor: "#35718A" },
+  trustBadgeDotMuted: { backgroundColor: "#78817A" },
+  trustBadgeText: { color: "#2D6A5C", fontFamily: "monospace", fontSize: 9, fontWeight: "700" },
+  trustBadgeTextWarning: { color: "#A84D22" },
+  trustBadgeTextInfo: { color: "#35718A" },
+  trustBadgeTextMuted: { color: "#68756D" },
+  dataTrustGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  trustMetric: { width: "48%", minHeight: 58, padding: 10, borderRadius: 11, borderWidth: 1, borderColor: "#D8E6DE", backgroundColor: "#FFFDF8" },
+  trustMetricLabel: { color: "#78817A", fontFamily: "monospace", fontSize: 8.5, fontWeight: "700", letterSpacing: 0.65 },
+  trustMetricValue: { color: "#17302B", fontSize: 11, fontWeight: "700", marginTop: 5, lineHeight: 15 },
+  trustMetricWarning: { color: "#A84D22" },
+  dataTrustNotice: { color: "#78543E", fontSize: 10.5, lineHeight: 15, marginTop: 11 },
   stationSelectorList: { paddingRight: 20, gap: 10 },
   stationChip: { width: 148, minHeight: 96, padding: 12, borderWidth: 1, borderColor: "#DDD7C8", backgroundColor: "#FFFDF8", borderRadius: 16 },
   stationChipSelected: { borderColor: "#17302B", backgroundColor: "#17302B" },
@@ -902,6 +1004,13 @@ const styles = StyleSheet.create({
   measurementShell: { gap: 18 },
   measurementShellLandscape: { flexDirection: "row", alignItems: "flex-start" },
   measurementIntroLandscape: { flex: 0.8, paddingTop: 15 },
+  fieldSteps: { flexDirection: "row", gap: 8, marginTop: 18, flexWrap: "wrap" },
+  fieldStep: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 30, paddingHorizontal: 8, borderRadius: 999, backgroundColor: "#EAE4D4" },
+  fieldStepActive: { backgroundColor: "#E4EFEA" },
+  fieldStepNumber: { width: 17, height: 17, borderRadius: 8.5, backgroundColor: "#C5BFAA", color: "#FFFDF8", fontFamily: "monospace", fontSize: 9, fontWeight: "700", textAlign: "center", lineHeight: 17 },
+  fieldStepNumberActive: { backgroundColor: "#2D6A5C" },
+  fieldStepText: { color: "#68756D", fontSize: 10.5, fontWeight: "700" },
+  fieldStepTextActive: { color: "#2D6A5C" },
   measurementCard: { borderRadius: 22, backgroundColor: "#17302B", padding: 19, shadowColor: "#0F1E1C", shadowOpacity: 0.15, shadowRadius: 15, shadowOffset: { width: 0, height: 7 }, elevation: 4 },
   measurementCardLandscape: { flex: 1.2 },
   formLabel: { color: "#AFC2B8", fontFamily: "monospace", fontSize: 10, fontWeight: "700", letterSpacing: 0.8, marginTop: 16, marginBottom: 7 },
@@ -914,10 +1023,30 @@ const styles = StyleSheet.create({
   inputUnit: { color: "#B7C8C0", fontFamily: "monospace", fontSize: 12, fontWeight: "700" },
   inputSupport: { color: "#AFC2B8", fontSize: 10.5, lineHeight: 16, marginTop: 7 },
   inputSupportInvalid: { color: "#F0C4AF" },
+  measurementPreview: { marginTop: 15, minHeight: 57, padding: 11, borderRadius: 13, flexDirection: "row", alignItems: "center", gap: 9 },
+  measurementPreviewDot: { width: 8, height: 8, borderRadius: 4 },
+  measurementPreviewTitle: { fontSize: 12, fontWeight: "800" },
+  measurementPreviewBody: { fontSize: 10.5, marginTop: 3 },
   saveButton: { minHeight: 52, marginTop: 22, borderRadius: 13, backgroundColor: "#A9CBBE", alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 8 },
   saveButtonText: { color: "#17302B", fontSize: 14, fontWeight: "800" },
   formFootnote: { marginTop: 14, flexDirection: "row", gap: 7, paddingRight: 4 },
   formFootnoteText: { flex: 1, color: "#AFC2B8", fontSize: 10.5, lineHeight: 15 },
+  measurementReviewCard: { borderRadius: 22, backgroundColor: "#FFFDF8", borderWidth: 1, borderColor: "#D8E6DE", padding: 19, shadowColor: "#0F1E1C", shadowOpacity: 0.1, shadowRadius: 15, shadowOffset: { width: 0, height: 7 }, elevation: 3 },
+  reviewIcon: { width: 48, height: 48, borderRadius: 15, backgroundColor: "#E4EFEA", alignItems: "center", justifyContent: "center" },
+  reviewTitle: { color: "#17302B", fontFamily: Platform.select({ ios: "Georgia", default: "serif" }), fontSize: 23, fontWeight: "700", marginTop: 14 },
+  reviewBody: { color: "#68756D", fontSize: 12, lineHeight: 18, marginTop: 6 },
+  reviewSummary: { marginTop: 18, borderRadius: 14, overflow: "hidden", borderWidth: 1, borderColor: "#E5DFD2" },
+  reviewSummaryRow: { minHeight: 46, paddingHorizontal: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#E5DFD2", backgroundColor: "#FFFDF8", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  reviewSummaryLabel: { color: "#78817A", fontFamily: "monospace", fontSize: 9, fontWeight: "700", letterSpacing: 0.7 },
+  reviewSummaryValue: { flex: 1, color: "#17302B", fontSize: 11.5, fontWeight: "700", textAlign: "right" },
+  reviewValue: { color: "#17302B", fontFamily: "monospace", fontSize: 17, fontWeight: "700" },
+  reviewWarning: { marginTop: 14, padding: 11, borderRadius: 12, backgroundColor: "#F6E2D6", flexDirection: "row", gap: 8 },
+  reviewWarningText: { flex: 1, color: "#8C5B40", fontSize: 10.5, lineHeight: 15 },
+  reviewActions: { flexDirection: "row", gap: 9, marginTop: 18 },
+  reviewSecondaryAction: { flex: 0.72, minHeight: 49, borderRadius: 13, backgroundColor: "#F0ECE3", alignItems: "center", justifyContent: "center" },
+  reviewSecondaryText: { color: "#17302B", fontSize: 13, fontWeight: "700" },
+  reviewPrimaryAction: { flex: 1.28, minHeight: 49, borderRadius: 13, backgroundColor: "#2D6A5C", alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 7 },
+  reviewPrimaryText: { color: "#FFFDF8", fontSize: 13, fontWeight: "700" },
   activeStationControl: { minHeight: 66, backgroundColor: "#FFFDF8", borderWidth: 1, borderColor: "#E1DCCD", borderRadius: 16, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 15 },
   activeStationDot: { width: 10, height: 10, borderRadius: 5 },
   activeStationLabel: { color: "#78817A", fontFamily: "monospace", fontSize: 9, fontWeight: "700", letterSpacing: 0.8 },
