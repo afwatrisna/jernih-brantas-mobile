@@ -32,6 +32,10 @@ The home screen uses a top-aligned summary with clear hierarchy: greeting and lo
 
 The brand palette will center on **Brantas Teal `#0D7775`** for trusted water information, **River Deep `#084C61`** for headings and navigation, **Water Mist `#E7F5F4`** for soft surfaces, **Silt Sand `#F6F1E7`** for environmental warmth, and **Leaf Green `#4F8A5B`** for positive water-quality states. Cautionary states will use restrained amber and coral tones that remain readable against white. Typography will use the platform system font with clear iOS-style scale and generous line-height for Indonesian-language reading.
 
+## Orientation Support
+
+The application supports both **portrait and landscape** device orientations. Portrait remains the primary one-handed layout; landscape uses the extra width to present station cards in two columns and places the measurement introduction beside its field-entry form. Scrollable content remains bounded to a readable maximum width, and the bottom navigation becomes more compact so it does not consume excessive vertical space.
+
 ## Accessibility and iOS Alignment
 
 All interactive controls will have a comfortably sized touch target, meaningful labels, and high-contrast text. The interface will keep the most important information above the fold, avoid dense dashboards, support dynamic text where available, and use standard tab navigation and presentation patterns familiar to iOS users.

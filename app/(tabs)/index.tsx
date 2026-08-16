@@ -14,6 +14,7 @@ import {
   Switch,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
 
@@ -74,7 +75,7 @@ function lastReading(history: HistoryByStation, stationId: string) {
   return readings[readings.length - 1];
 }
 
-function WaterStatusCard({ station, readings, simulation }: { station: StationState; readings: Reading[]; simulation: boolean }) {
+function WaterStatusCard({ station, readings, simulation, landscape }: { station: StationState; readings: Reading[]; simulation: boolean; landscape: boolean }) {
   const waterClass = classifyNtu(station.ntu);
   const trend = valueTrend(readings);
   const latest = readings[readings.length - 1];
@@ -86,7 +87,7 @@ function WaterStatusCard({ station, readings, simulation }: { station: StationSt
   }, [station.ntu, valueOpacity]);
 
   return (
-    <View style={styles.statusCard}>
+    <View style={[styles.statusCard, landscape && styles.statusCardLandscape]}>
       <View style={styles.statusOrbLarge} />
       <View style={styles.statusOrbSmall} />
       <View style={styles.statusTopRow}>
@@ -223,6 +224,8 @@ function AppHeader({ simulation, onSettings }: { simulation: boolean; onSettings
 }
 
 export default function HomeScreen() {
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
   const [stations, setStations] = useState<StationState[]>(initialStationStates);
   const [history, setHistory] = useState<HistoryByStation>({});
   const [activeId, setActiveId] = useState("malang");
@@ -373,14 +376,14 @@ export default function HomeScreen() {
   }, [filteredHistory]);
 
   const renderHome = () => (
-    <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <ScrollView contentContainerStyle={[styles.scrollContent, isLandscape && styles.scrollContentLandscape]} showsVerticalScrollIndicator={false}>
       <View style={styles.introBlock}>
         <Text style={styles.eyebrow}>PEMANTAUAN KEJERNIHAN</Text>
         <Text style={styles.pageDisplay}>Kondisi sungai{`\n`}saat ini.</Text>
         <Text style={styles.introCopy}>Pantau titik-titik penting Sungai Brantas dan catat pembacaan lapangan dalam satu alur yang ringkas.</Text>
       </View>
       <StationSelector stations={stations} activeId={activeId} onSelect={selectStation} />
-      <WaterStatusCard station={activeStation} readings={activeHistory} simulation={simulation} />
+      <WaterStatusCard station={activeStation} readings={activeHistory} simulation={simulation} landscape={isLandscape} />
 
       <View style={styles.metricGrid}>
         <MetricTile value={`${formatNtu(averageRiver)}`} label="Rata-rata sungai" />
@@ -408,7 +411,10 @@ export default function HomeScreen() {
     <FlatList
       data={stations}
       keyExtractor={(station) => station.id}
-      contentContainerStyle={styles.listContent}
+      key={isLandscape ? "landscape-stations" : "portrait-stations"}
+      numColumns={isLandscape ? 2 : 1}
+      columnWrapperStyle={isLandscape ? styles.stationColumns : undefined}
+      contentContainerStyle={[styles.listContent, isLandscape && styles.listContentLandscape]}
       showsVerticalScrollIndicator={false}
       ListHeaderComponent={
         <View style={styles.introBlock}>
@@ -426,7 +432,7 @@ export default function HomeScreen() {
             onPress={() => selectStation(station.id, "home")}
             accessibilityRole="button"
             accessibilityLabel={`${station.name}, ${formatNtu(station.ntu)} NTU, ${waterClass.label}. Buka detail di Beranda.`}
-            style={({ pressed }) => [styles.stationListCard, selected && styles.stationListCardSelected, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.stationListCard, isLandscape && styles.stationListCardLandscape, selected && styles.stationListCardSelected, pressed && styles.pressed]}
           >
             <View style={[styles.stationColorBar, { backgroundColor: waterClass.color }]} />
             <View style={styles.stationListMain}>
@@ -466,14 +472,15 @@ export default function HomeScreen() {
 
   const renderMeasure = () => (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.select({ ios: "padding", default: undefined })}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <View style={styles.introBlock}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, isLandscape && styles.scrollContentLandscape]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <View style={[styles.measurementShell, isLandscape && styles.measurementShellLandscape]}>
+        <View style={[styles.introBlock, isLandscape && styles.measurementIntroLandscape]}>
           <Text style={styles.eyebrow}>PENGUKURAN MANUAL</Text>
           <Text style={styles.pageDisplay}>Catat hasil{`\n`}lapangan.</Text>
           <Text style={styles.introCopy}>Pembacaan tersimpan hanya di perangkat ini dan langsung memperbarui riwayat stasiun.</Text>
         </View>
 
-        <View style={styles.measurementCard}>
+        <View style={[styles.measurementCard, isLandscape && styles.measurementCardLandscape]}>
           <Text style={styles.formLabel}>STASIUN</Text>
           <Pressable onPress={() => setSheet("formStation")} style={({ pressed }) => [styles.selectControl, pressed && styles.pressed]} accessibilityRole="button">
             <View>
@@ -515,6 +522,7 @@ export default function HomeScreen() {
             <Text style={styles.formFootnoteText}>Waktu, sumber, ID, dan klasifikasi dibuat otomatis saat pengukuran disimpan.</Text>
           </View>
         </View>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -525,7 +533,7 @@ export default function HomeScreen() {
       <FlatList
         data={analyticsMode === "history" ? sortedHistory : []}
         keyExtractor={(reading) => reading.id}
-        contentContainerStyle={styles.analyticsListContent}
+        contentContainerStyle={[styles.analyticsListContent, isLandscape && styles.analyticsListContentLandscape]}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <View>
@@ -616,7 +624,7 @@ export default function HomeScreen() {
   };
 
   const renderSettings = () => (
-    <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <ScrollView contentContainerStyle={[styles.scrollContent, isLandscape && styles.scrollContentLandscape]} showsVerticalScrollIndicator={false}>
       <View style={styles.introBlock}>
         <Text style={styles.eyebrow}>PENGATURAN</Text>
         <Text style={styles.pageDisplay}>Kelola cara{`\n`}aplikasi bekerja.</Text>
@@ -704,7 +712,7 @@ export default function HomeScreen() {
           {section === "analytics" && renderAnalytics()}
           {section === "settings" && renderSettings()}
         </View>
-        <View style={styles.bottomNav}>
+        <View style={[styles.bottomNav, isLandscape && styles.bottomNavLandscape]}>
           {NAV_ITEMS.map((item) => {
             const selected = section === item.key;
             const isMeasure = item.key === "measure";
@@ -809,8 +817,11 @@ const styles = StyleSheet.create({
   headerModeText: { color: "#2D6A5C", fontFamily: "monospace", fontSize: 10, fontWeight: "700" },
   modeDotPaused: { backgroundColor: "#A68D7B" },
   scrollContent: { padding: 20, paddingBottom: 28, gap: 18 },
+  scrollContentLandscape: { width: "100%", maxWidth: 1120, alignSelf: "center", paddingHorizontal: 28 },
   listContent: { padding: 20, paddingBottom: 26, gap: 11 },
+  listContentLandscape: { width: "100%", maxWidth: 1120, alignSelf: "center", paddingHorizontal: 28 },
   analyticsListContent: { padding: 20, paddingBottom: 26, flexGrow: 1 },
+  analyticsListContentLandscape: { width: "100%", maxWidth: 1120, alignSelf: "center", paddingHorizontal: 28 },
   introBlock: { marginBottom: 3 },
   eyebrow: { color: "#4C8B7A", fontFamily: "monospace", fontSize: 10, fontWeight: "700", letterSpacing: 1.3, marginBottom: 8 },
   pageDisplay: { color: "#17302B", fontFamily: Platform.select({ ios: "Georgia", default: "serif" }), fontSize: 30, fontWeight: "700", letterSpacing: -0.5, lineHeight: 34 },
@@ -827,6 +838,7 @@ const styles = StyleSheet.create({
   stationChipValue: { color: "#2D6A5C", fontFamily: "monospace", fontSize: 15, fontWeight: "700", marginTop: 12 },
   stationChipValueSelected: { color: "#D7EBE0" },
   statusCard: { backgroundColor: "#17302B", borderRadius: 24, padding: 21, overflow: "hidden", minHeight: 290, shadowColor: "#0F1E1C", shadowOpacity: 0.2, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 5 },
+  statusCardLandscape: { minHeight: 250 },
   statusOrbLarge: { position: "absolute", width: 240, height: 240, borderRadius: 120, borderWidth: 1, borderColor: "rgba(255,253,248,0.10)", top: -130, right: -80 },
   statusOrbSmall: { position: "absolute", width: 148, height: 148, borderRadius: 74, borderWidth: 1, borderColor: "rgba(255,253,248,0.10)", top: -88, right: -25 },
   statusTopRow: { flexDirection: "row", justifyContent: "space-between", gap: 12 },
@@ -869,6 +881,8 @@ const styles = StyleSheet.create({
   primaryActionText: { color: "#FFFDF8", fontSize: 14, fontWeight: "700" },
   actionArrow: { marginLeft: "auto" },
   stationListCard: { position: "relative", minHeight: 118, padding: 16, paddingLeft: 21, borderRadius: 18, backgroundColor: "#FFFDF8", borderWidth: 1, borderColor: "#E1DCCD", flexDirection: "row", alignItems: "center", gap: 8, overflow: "hidden" },
+  stationListCardLandscape: { flex: 1 },
+  stationColumns: { gap: 10 },
   stationListCardSelected: { borderColor: "#78A994", borderWidth: 1.4 },
   stationColorBar: { position: "absolute", width: 5, top: 0, bottom: 0, left: 0 },
   stationListMain: { flex: 1 },
@@ -885,7 +899,11 @@ const styles = StyleSheet.create({
   legendCard: { padding: 16, marginTop: 6, borderRadius: 16, backgroundColor: "#EAE4D4" },
   legendTitle: { color: "#17302B", fontSize: 13, fontWeight: "700" },
   legendCopy: { color: "#68756D", fontSize: 11, lineHeight: 17, marginTop: 5 },
+  measurementShell: { gap: 18 },
+  measurementShellLandscape: { flexDirection: "row", alignItems: "flex-start" },
+  measurementIntroLandscape: { flex: 0.8, paddingTop: 15 },
   measurementCard: { borderRadius: 22, backgroundColor: "#17302B", padding: 19, shadowColor: "#0F1E1C", shadowOpacity: 0.15, shadowRadius: 15, shadowOffset: { width: 0, height: 7 }, elevation: 4 },
+  measurementCardLandscape: { flex: 1.2 },
   formLabel: { color: "#AFC2B8", fontFamily: "monospace", fontSize: 10, fontWeight: "700", letterSpacing: 0.8, marginTop: 16, marginBottom: 7 },
   selectControl: { minHeight: 59, paddingHorizontal: 14, borderWidth: 1, borderColor: "rgba(255,253,248,0.18)", borderRadius: 13, backgroundColor: "rgba(255,253,248,0.08)", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 9 },
   selectValue: { color: "#FFFDF8", fontSize: 14, fontWeight: "600", flexShrink: 1 },
@@ -950,6 +968,7 @@ const styles = StyleSheet.create({
   dangerActionTitle: { color: "#8B3A1F", fontSize: 14, fontWeight: "700" },
   dangerActionBody: { color: "#9B6650", fontSize: 10.5, lineHeight: 15, marginTop: 3 },
   bottomNav: { minHeight: 73, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#DDD7C8", backgroundColor: "#FFFDF8", flexDirection: "row", alignItems: "center", justifyContent: "space-around", paddingHorizontal: 5 },
+  bottomNavLandscape: { minHeight: 62 },
   navItem: { flex: 1, minHeight: 65, alignItems: "center", justifyContent: "center", gap: 2 },
   navItemMeasure: { marginTop: -16 },
   navIcon: { height: 28, alignItems: "center", justifyContent: "center" },

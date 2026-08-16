@@ -5,3 +5,4 @@
 - [x] Implement working local navigation and on-device interaction feedback.
 - [x] Create and configure unique Jernih Brantas app branding assets.
 - [x] Validate types, linting, and primary flows before delivery.
+- [x] Support portrait and landscape orientations with adaptive app layouts.
