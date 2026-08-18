@@ -22,3 +22,8 @@
 - [x] Validate responsive website behavior and interactions on desktop and mobile.
 - [x] Diagnose the reported public website access issue.
 - [x] Provide a Windows workflow for independently developing and running the Jernih website.
+- [x] Prepare a standalone Jernih HTML repository for GitHub Pages.
+- [x] Create or update the GitHub repository and enable GitHub Pages.
+- [x] Verify and provide the public GitHub Pages URL.
+- [x] Prepare a safe migration roadmap from Jernih Expo web/mobile to Next.js with TypeScript.
+- [x] Publish the prepared website to github.com/afwatrisna/jernih-brantas-mobile.
