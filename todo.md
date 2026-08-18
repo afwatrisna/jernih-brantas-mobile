@@ -20,3 +20,5 @@
 - [x] Validate the map and live simulation behavior at the mobile breakpoint.
 - [x] Bring the responsive website to parity with APK Monitor, Field Mode, analytics, simulation, and settings features.
 - [x] Validate responsive website behavior and interactions on desktop and mobile.
+- [x] Diagnose the reported public website access issue.
+- [x] Provide a Windows workflow for independently developing and running the Jernih website.
