@@ -11,3 +11,5 @@
 - [x] Draft HTML/CSS updates for Field Mode and the Data Trust strip.
 - [x] Implement Field Mode and Data Trust in the Jernih mobile app.
 - [x] Validate Field Mode, measurement review, and Data Trust states on the updated mobile interface.
+- [x] Create a responsive Jernih Brantas website version for mobile and desktop browsers.
+- [x] Validate the website layout at mobile and desktop breakpoints.
