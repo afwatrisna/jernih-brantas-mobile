@@ -15,3 +15,6 @@
 - [x] Validate the website layout at mobile and desktop breakpoints.
 - [x] Create a standalone HTML version of the responsive Jernih Brantas website.
 - [x] Validate and deliver the standalone HTML file.
+- [x] Correct the responsive website map path and marker alignment on mobile.
+- [x] Add visible recurring NTU simulation updates to the responsive website.
+- [x] Validate the map and live simulation behavior at the mobile breakpoint.

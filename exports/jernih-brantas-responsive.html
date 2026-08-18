@@ -70,6 +70,7 @@
     .status-content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; min-height: 170px; }
     .ntu-line { display: flex; align-items: baseline; }
     .ntu-number { font-family: Georgia, serif; font-size: 62px; line-height: 1; font-weight: 700; letter-spacing: -.04em; }
+    .ntu-number.updated { animation: number-update .42s ease; }
     .ntu-unit { margin-left: 8px; color: #B7C8C0; font: 700 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
     .class-pill { display: inline-flex; align-items: center; gap: 6px; margin-top: 11px; padding: 7px 10px; border-radius: 999px; font-size: 10.5px; font-weight: 800; }
     .gauge { position: relative; width: 80px; height: 136px; }
@@ -102,10 +103,10 @@
     .card-head { display: flex; justify-content: space-between; gap: 10px; }
     .card-head h2 { margin: 0; font-size: 14.5px; } .card-head p { margin: 4px 0 0; color: var(--muted); font-size: 10.5px; }
     .river-map { position: relative; min-height: 205px; margin-top: 14px; overflow: hidden; border-radius: 15px; background: #EAE4D4; }
-    .river-line { position: absolute; top: 52%; left: 5%; width: 86%; height: 3px; border-radius: 5px; background: #9FC5B6; transform: rotate(37deg); }
-    .map-point { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border: 3px solid var(--paper); border-radius: 50%; box-shadow: 0 2px 6px rgba(15,30,28,.25); transition: transform .18s ease; }
+    .river-path { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .map-point { position: absolute; z-index: 2; width: 18px; height: 18px; margin: -9px 0 0 -9px; border: 3px solid var(--paper); border-radius: 50%; box-shadow: 0 2px 6px rgba(15,30,28,.25); transition: transform .18s ease, background-color .3s ease; }
     .map-point.active { width: 25px; height: 25px; margin: -12px 0 0 -12px; border-width: 4px; }
-    .map-caption { position: absolute; left: 12px; bottom: 12px; padding: 8px 10px; border-radius: 10px; background: rgba(255,253,248,.92); }
+    .map-caption { position: absolute; z-index: 3; left: 12px; bottom: 12px; padding: 8px 10px; border-radius: 10px; background: rgba(255,253,248,.92); }
     .map-caption strong { display: block; font-size: 10.5px; } .map-caption span { color: #477261; font: 9px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
     .field-callout { min-height: 315px; padding: 20px; border-radius: 20px; color: var(--paper); background: var(--ink); }
     .callout-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 14px; color: var(--ink); background: #A9CBBE; font-size: 20px; }
@@ -164,6 +165,7 @@
     footer strong { color: #477261; font: 700 8.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; }
     .mobile-nav { display: none; }
     .hidden { display: none !important; }
+    @keyframes number-update { 0% { opacity: .35; transform: translateY(5px); } 100% { opacity: 1; transform: translateY(0); } }
     @media (max-width: 959px) {
       .shell { padding: 16px; } .workspace { display: block; } aside { display: none; } .mobile-nav { display: flex; gap: 7px; margin-bottom: 18px; } .mobile-nav button { flex: 1; min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 7px; border: 0; border-radius: 11px; color: #688078; background: var(--paper); font-size: 11px; font-weight: 700; } .mobile-nav button.active { color: var(--paper); background: var(--ink); } .monitor-grid, .field-layout { grid-template-columns: 1fr; } .field-layout .trust-strip { margin-top: 15px; }
     }
@@ -193,10 +195,10 @@
 
         <section id="monitor" class="screen active">
           <div class="intro"><span class="eyebrow">◉ MONITOR MODE</span><h1>Kondisi sungai,<br>lebih mudah dipahami.</h1><p>Pantau titik-titik penting Sungai Brantas. Gunakan Field Mode saat petugas perlu mencatat pembacaan lapangan secara terstruktur.</p></div>
-          <article class="status-card"><span class="orb one"></span><span class="orb two"></span><div class="status-header"><div><div class="status-location" id="status-location"></div><div class="status-station" id="status-station"></div></div><span class="status-live"><span class="dot"></span>SIMULASI</span></div><div class="status-content"><div><div class="ntu-line"><span class="ntu-number" id="status-ntu"></span><span class="ntu-unit">NTU</span></div><span class="class-pill" id="status-class"></span></div><div class="gauge"><div class="gauge-track"><div class="gauge-fill" id="gauge-fill"></div></div><span class="gauge-label top">100</span><span class="gauge-label middle">50</span><span class="gauge-label bottom">0</span></div></div><div class="status-footer"><span>Data lokal · diperbarui untuk demo</span><span>Buka Field Mode untuk merekam</span></div></article>
-          <div class="trust-strip"><div class="trust-head"><strong class="trust-title">✓ DATA TRUST</strong><span class="source-badge"><span class="dot"></span>SIMULASI</span></div><div class="trust-grid"><div class="trust-cell"><small>PEMBARUAN</small><strong>Baru diperbarui</strong></div><div class="trust-cell"><small>SUMBER</small><strong>NTU-Logger demo</strong></div><div class="trust-cell"><small>VALIDASI</small><strong class="warning">Perlu verifikasi</strong></div><div class="trust-cell"><small>PENYIMPANAN</small><strong>Lokal di browser</strong></div></div><p class="trust-notice">Nilai simulasi berguna untuk demo alur kerja; bukan data lingkungan resmi.</p></div>
-          <div class="metrics"><div class="metric"><span class="metric-icon">≋</span><strong class="metric-value" id="average-ntu">21.7</strong><span class="metric-label">Rata-rata sungai</span></div><div class="metric accent"><span class="metric-icon">✓</span><strong class="metric-value">3 / 5</strong><span class="metric-label">Sesuai Kelas II</span></div><div class="metric"><span class="metric-icon">▤</span><strong class="metric-value">40</strong><span class="metric-label">Catatan demo</span></div></div>
-          <div class="monitor-grid"><article class="surface-card"><div class="card-head"><div><h2>Aliran & titik pantau</h2><p>Pilih titik untuk memperbarui ringkasan.</p></div><span>⌖</span></div><div class="river-map"><span class="river-line"></span><div id="map-points"></div><div class="map-caption"><strong id="map-caption-title"></strong><span id="map-caption-value"></span></div></div></article><article class="field-callout"><div class="callout-icon">☷</div><span class="callout-kicker">PENGUKURAN LAPANGAN</span><h2>Siap mencatat hasil turbidimeter?</h2><p>Field Mode memisahkan alur pencatatan dari dashboard agar titik, nilai, dan status verifikasi lebih jelas.</p><button class="button-primary mode-button" data-mode="field">Buka Field Mode <span>→</span></button></article></div>
+          <article class="status-card"><span class="orb one"></span><span class="orb two"></span><div class="status-header"><div><div class="status-location" id="status-location"></div><div class="status-station" id="status-station"></div></div><span class="status-live"><span class="dot"></span><span id="simulation-status">SIMULASI AKTIF</span></span></div><div class="status-content"><div><div class="ntu-line"><span class="ntu-number" id="status-ntu"></span><span class="ntu-unit">NTU</span></div><span class="class-pill" id="status-class"></span></div><div class="gauge"><div class="gauge-track"><div class="gauge-fill" id="gauge-fill"></div></div><span class="gauge-label top">100</span><span class="gauge-label middle">50</span><span class="gauge-label bottom">0</span></div></div><div class="status-footer"><span id="simulation-message">Simulasi berjalan · interval 4 detik</span><span>Buka Field Mode untuk merekam</span></div></article>
+          <div class="trust-strip"><div class="trust-head"><strong class="trust-title">✓ DATA TRUST</strong><span class="source-badge"><span class="dot"></span>SIMULASI</span></div><div class="trust-grid"><div class="trust-cell"><small>PEMBARUAN</small><strong id="trust-updated">Menunggu siklus simulasi</strong></div><div class="trust-cell"><small>SUMBER</small><strong>NTU-Logger demo</strong></div><div class="trust-cell"><small>VALIDASI</small><strong class="warning">Perlu verifikasi</strong></div><div class="trust-cell"><small>PENYIMPANAN</small><strong>Lokal di browser</strong></div></div><p class="trust-notice">Nilai simulasi berguna untuk demo alur kerja; bukan data lingkungan resmi.</p></div>
+          <div class="metrics"><div class="metric"><span class="metric-icon">≋</span><strong class="metric-value" id="average-ntu">21.7</strong><span class="metric-label">Rata-rata sungai</span></div><div class="metric accent"><span class="metric-icon">✓</span><strong class="metric-value" id="compliant-count">3 / 5</strong><span class="metric-label">Sesuai Kelas II</span></div><div class="metric"><span class="metric-icon">▤</span><strong class="metric-value" id="demo-records">40</strong><span class="metric-label">Catatan simulasi</span></div></div>
+          <div class="monitor-grid"><article class="surface-card"><div class="card-head"><div><h2>Aliran & titik pantau</h2><p>Pilih titik untuk memperbarui ringkasan. Simulasi diperbarui tiap 4 detik.</p></div><span>⌖</span></div><div class="river-map"><svg class="river-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M15 21 C21 29 26 35 30 42 C37 46 43 49 48 51 C54 56 57 60 61 64 C68 70 76 75 82 80" fill="none" stroke="#9FC5B6" stroke-width="2.8"/><path d="M15 21 C21 29 26 35 30 42 C37 46 43 49 48 51 C54 56 57 60 61 64 C68 70 76 75 82 80" fill="none" stroke="#DCEBE5" stroke-width=".75"/></svg><div id="map-points"></div><div class="map-caption"><strong id="map-caption-title"></strong><span id="map-caption-value"></span></div></div></article><article class="field-callout"><div class="callout-icon">☷</div><span class="callout-kicker">PENGUKURAN LAPANGAN</span><h2>Siap mencatat hasil turbidimeter?</h2><p>Field Mode memisahkan alur pencatatan dari dashboard agar titik, nilai, dan status verifikasi lebih jelas.</p><button class="button-primary mode-button" data-mode="field">Buka Field Mode <span>→</span></button></article></div>
         </section>
 
         <section id="field" class="screen">
@@ -215,13 +217,15 @@
 
   <script>
     const stations = [
-      { id:'malang', name:'Malang Hulu', place:'Bendungan Sengguruh', ntu:9.2, x:'15%', y:'21%' },
-      { id:'kediri', name:'Kediri', place:'Jembatan Mrican', ntu:16.8, x:'30%', y:'42%' },
-      { id:'jombang', name:'Jombang', place:'Ploso', ntu:21.4, x:'48%', y:'51%' },
-      { id:'mojokerto', name:'Mojokerto', place:'Bendung Lengkong', ntu:27.0, x:'61%', y:'64%' },
-      { id:'surabaya', name:'Surabaya Hilir', place:'Karangpilang', ntu:34.2, x:'82%', y:'80%' }
+      { id:'malang', name:'Malang Hulu', place:'Bendungan Sengguruh', base:9, ntu:9.2, x:'15%', y:'21%' },
+      { id:'kediri', name:'Kediri', place:'Jembatan Mrican', base:16, ntu:16.8, x:'30%', y:'42%' },
+      { id:'jombang', name:'Jombang', place:'Ploso', base:21, ntu:21.4, x:'48%', y:'51%' },
+      { id:'mojokerto', name:'Mojokerto', place:'Bendung Lengkong', base:27, ntu:27.0, x:'61%', y:'64%' },
+      { id:'surabaya', name:'Surabaya Hilir', place:'Karangpilang', base:34, ntu:34.2, x:'82%', y:'80%' }
     ];
     let activeId = 'malang';
+    let simulationCycle = 0;
+    let simulationRecords = 40;
     const colorFor = ntu => ntu <= 5 ? ['Sangat jernih','I','#2D6A5C','#DCEBE5'] : ntu <= 25 ? ['Jernih','II','#4C8B7A','#E4F0EA'] : ntu <= 50 ? ['Keruh','III','#C4622D','#F6E2D6'] : ['Sangat keruh','IV','#8B3A1F','#F0D9D0'];
     const active = () => stations.find(s => s.id === activeId);
     const byId = id => document.getElementById(id);
@@ -241,12 +245,16 @@
       const station = active(); const [label, grade, color, soft] = colorFor(station.ntu);
       byId('status-location').textContent = `SUNGAI BRANTAS · ${station.place.toUpperCase()}`;
       byId('status-station').textContent = station.name;
-      byId('status-ntu').textContent = station.ntu.toFixed(1);
+      const ntuOutput = byId('status-ntu');
+      ntuOutput.textContent = station.ntu.toFixed(1);
       const klass = byId('status-class'); klass.style.cssText = `background:${soft};color:${color}`; klass.innerHTML = `<span class="station-dot" style="background:${color}"></span>${label} · Kelas ${grade}`;
       byId('gauge-fill').style.height = `${Math.max(8, station.ntu)}%`;
       byId('map-caption-title').textContent = station.name;
       byId('map-caption-value').textContent = `${station.ntu.toFixed(1)} NTU · ${label}`;
-      const average = stations.reduce((sum, item) => sum + item.ntu, 0) / stations.length; byId('average-ntu').textContent = average.toFixed(1);
+      const average = stations.reduce((sum, item) => sum + item.ntu, 0) / stations.length;
+      byId('average-ntu').textContent = average.toFixed(1);
+      byId('compliant-count').textContent = `${stations.filter(item => item.ntu <= 25).length} / ${stations.length}`;
+      byId('demo-records').textContent = simulationRecords;
     }
     function setMode(mode) { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === mode)); document.querySelectorAll('.mode-button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode)); window.scrollTo({top:0, behavior:'smooth'}); }
     document.querySelectorAll('.mode-button').forEach(button => button.addEventListener('click', () => setMode(button.dataset.mode)));
@@ -263,7 +271,26 @@
     byId('edit-button').addEventListener('click', () => { byId('field-entry').classList.remove('hidden'); byId('field-review').classList.remove('visible'); });
     byId('save-button').addEventListener('click', () => { const value = Number.parseFloat(ntuInput.value.replace(',', '.')); const station = active(); station.ntu = Math.round(value * 10) / 10; byId('field-review').classList.remove('visible'); byId('field-saved').classList.add('visible'); byId('saved-copy').textContent = `${station.ntu.toFixed(1)} NTU untuk ${station.name} telah masuk ke demo ini sebagai input manual.`; renderStations(); renderStatus(); });
     byId('new-entry-button').addEventListener('click', () => { ntuInput.value = ''; updateInput(); byId('field-saved').classList.remove('visible'); byId('field-entry').classList.remove('hidden'); byId('step-entry').classList.remove('active'); byId('step-review').classList.remove('active'); });
+    function formatSimulationTime() { return new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
+    function runSimulation() {
+      simulationCycle += 1;
+      stations.forEach((station, index) => {
+        const pulse = Math.sin(simulationCycle * 0.86 + index * 1.7) * 0.62;
+        const microShift = (((simulationCycle * 3 + index * 5) % 7) - 3) * 0.12;
+        const correction = (station.base - station.ntu) * 0.08;
+        station.ntu = Math.max(1.2, Math.round((station.ntu + pulse + microShift + correction) * 10) / 10);
+      });
+      simulationRecords += stations.length;
+      renderStations(); renderStatus();
+      const time = formatSimulationTime();
+      byId('trust-updated').textContent = `Diperbarui ${time}`;
+      byId('simulation-message').textContent = `Siklus ${simulationCycle} · diperbarui ${time}`;
+      const ntuOutput = byId('status-ntu');
+      ntuOutput.classList.remove('updated'); void ntuOutput.offsetWidth; ntuOutput.classList.add('updated');
+    }
     renderStations(); renderStatus(); updateInput();
+    setTimeout(runSimulation, 900);
+    setInterval(runSimulation, 4000);
   </script>
 </body>
 </html>
