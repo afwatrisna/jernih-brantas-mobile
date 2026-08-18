@@ -13,3 +13,5 @@
 - [x] Validate Field Mode, measurement review, and Data Trust states on the updated mobile interface.
 - [x] Create a responsive Jernih Brantas website version for mobile and desktop browsers.
 - [x] Validate the website layout at mobile and desktop breakpoints.
+- [x] Create a standalone HTML version of the responsive Jernih Brantas website.
+- [x] Validate and deliver the standalone HTML file.
