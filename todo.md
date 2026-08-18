@@ -27,3 +27,6 @@
 - [x] Verify and provide the public GitHub Pages URL.
 - [x] Prepare a safe migration roadmap from Jernih Expo web/mobile to Next.js with TypeScript.
 - [x] Publish the prepared website to github.com/afwatrisna/jernih-brantas-mobile.
+- [x] Scaffold a dedicated Jernih Next.js and TypeScript web application.
+- [x] Implement Monitor, Field Mode, Data Trust, simulation, analytics, and settings in Next.js.
+- [x] Validate the Next.js build and responsive browser layouts.
