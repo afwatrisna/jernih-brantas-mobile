@@ -18,3 +18,5 @@
 - [x] Correct the responsive website map path and marker alignment on mobile.
 - [x] Add visible recurring NTU simulation updates to the responsive website.
 - [x] Validate the map and live simulation behavior at the mobile breakpoint.
+- [x] Bring the responsive website to parity with APK Monitor, Field Mode, analytics, simulation, and settings features.
+- [x] Validate responsive website behavior and interactions on desktop and mobile.
