@@ -30,9 +30,14 @@
 - [x] Scaffold a dedicated Jernih Next.js and TypeScript web application.
 - [x] Implement Monitor, Field Mode, Data Trust, simulation, analytics, and settings in Next.js.
 - [x] Validate the Next.js build and responsive browser layouts.
-- [ ] Verify Vercel deployment access and prepare the Jernih Next.js project for production.
+- [x] Verify Vercel deployment access and prepare the Jernih Next.js project for production.
 - [x] Deploy the Jernih Next.js application to Vercel.
-- [ ] Verify and provide the public Vercel URL.
+- [x] Verify and provide the public Vercel URL.
 - [x] Diagnose the failed Vercel production build and correct its cause.
-- [ ] Redeploy the corrected Jernih Next.js application and verify public access.
+- [x] Redeploy the corrected Jernih Next.js application and verify public access.
 - [x] Guide the user through manually deploying the Next.js project from the Vercel dashboard.
+- [x] Push the complete `next-web` Next.js source directory to github.com/afwatrisna/jernih-brantas-mobile.
+- [x] Verify the GitHub source upload and provide Vercel import settings.
+- [x] Deploy the Next.js application from the `next-web` directory to the Vercel Okayy workspace.
+- [x] Verify the Vercel production URL is publicly accessible without sign-in.
+- [x] Validate the user-reported deployment at jernih-brantas-mobile.vercel.app.
