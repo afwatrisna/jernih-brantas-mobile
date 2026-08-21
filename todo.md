@@ -41,3 +41,4 @@
 - [x] Deploy the Next.js application from the `next-web` directory to the Vercel Okayy workspace.
 - [x] Verify the Vercel production URL is publicly accessible without sign-in.
 - [x] Validate the user-reported deployment at jernih-brantas-mobile.vercel.app.
+- [x] Explain the programming languages and file roles used in the deployed Jernih Brantas application.
