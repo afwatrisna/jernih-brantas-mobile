@@ -42,3 +42,4 @@
 - [x] Verify the Vercel production URL is publicly accessible without sign-in.
 - [x] Validate the user-reported deployment at jernih-brantas-mobile.vercel.app.
 - [x] Explain the programming languages and file roles used in the deployed Jernih Brantas application.
+- [x] Create and deliver a clean ZIP archive of the `next-web` Next.js project.
