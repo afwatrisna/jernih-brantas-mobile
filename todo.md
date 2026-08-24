@@ -51,3 +51,6 @@
 - [ ] Design and implement the database layer before resuming the full architecture refactor.
 - [ ] Implement the database, authentication, and authorization foundation with Supabase.
 - [x] Safely apply the supplied Supabase integration package, validate the authorized database project, and synchronize the Next.js source to GitHub.
+- [x] Run the Supabase-integrated Next.js build locally and inspect its initial page and browser console.
+- [x] Integrate the supplied Supabase page-data changes into the stable Next.js dashboard.
+- [x] Validate a clearly labelled Field Mode test submission, success feedback, and its resulting record in Supabase.

@@ -11,6 +11,18 @@ import {
   type ReadingSource,
   type StationState,
 } from "../lib/jernih-data";
+import { useSupabaseReadings, type SupabaseReading } from "../hooks/useSupabaseReadings";
+import { createDevelopmentReading } from "../lib/readings-client";
+
+function toReading(row: SupabaseReading): Reading {
+  return {
+    id: row.id,
+    ntu: Number(row.ntu),
+    timestamp: new Date(row.created_at).getTime(),
+    source: row.source,
+    equipment: row.equipment,
+  };
+}
 
 type Section = "monitor" | "field" | "analytics" | "settings";
 type History = Record<string, Reading[]>;
@@ -171,7 +183,7 @@ function DataTrust({ source, simulation, updatedAt, equipment }: { source: Readi
         <div><span>PEMBARUAN</span><strong>{formatTime(updatedAt)} WIB</strong></div>
         <div><span>SUMBER</span><strong>{equipment}</strong></div>
         <div><span>VALIDASI</span><strong className={isManual || source === "simulation" ? "warning" : "good"}>{trust.detail}</strong></div>
-        <div><span>PENYIMPANAN</span><strong>Lokal di browser</strong></div>
+        <div><span>PENYIMPANAN</span><strong>Supabase + demo lokal</strong></div>
       </div>
       <p>{trust.note}</p>
     </section>
@@ -293,13 +305,12 @@ function AlertPanel({
 
 export default function Home() {
   const defaultStations = useMemo(() => initialStationStates(), []);
-  const [stations, setStations] = useState<StationState[]>(defaultStations);
-  const [history, setHistory] = useState<History>(() => seedHistory(defaultStations));
+  const [localStations, setLocalStations] = useState<StationState[]>(defaultStations);
+  const { readings: supabaseReadings, loading: readingsLoading, refetch } = useSupabaseReadings();
   const [activeId, setActiveId] = useState("malang");
   const [section, setSection] = useState<Section>("monitor");
   const [simulation, setSimulation] = useState(true);
   const [sourceByStation, setSourceByStation] = useState<SourceByStation>(() => Object.fromEntries(defaultStations.map((station) => [station.id, "simulation"])) as SourceByStation);
-  const [recordCount, setRecordCount] = useState(45);
   const [fieldStation, setFieldStation] = useState("malang");
   const [fieldNtu, setFieldNtu] = useState("");
   const [fieldEquipment, setFieldEquipment] = useState<(typeof EQUIPMENT)[number]>(EQUIPMENT[0]);
@@ -310,17 +321,42 @@ export default function Home() {
   const [timeRange, setTimeRange] = useState<TimeRange>("24H");
   const [comparisonIds, setComparisonIds] = useState<string[]>(["malang", "mojokerto"]);
   const [rangeAnchor] = useState(() => Date.now());
+  const fallbackHistory = useMemo(() => seedHistory(defaultStations), [defaultStations]);
+  const history = useMemo<History>(() => {
+    if (readingsLoading || supabaseReadings.length === 0) return fallbackHistory;
+    const grouped = Object.fromEntries(defaultStations.map((station) => [station.id, [] as Reading[]])) as History;
+    for (const row of supabaseReadings) {
+      if (grouped[row.station_id]) grouped[row.station_id].push(toReading(row));
+    }
+    for (const stationId of Object.keys(grouped)) {
+      grouped[stationId] = grouped[stationId].length > 0
+        ? grouped[stationId].slice(-MAX_HISTORY)
+        : fallbackHistory[stationId];
+    }
+    return grouped;
+  }, [defaultStations, fallbackHistory, readingsLoading, supabaseReadings]);
+  const hasRemoteReadings = supabaseReadings.length > 0;
+  const recordCount = hasRemoteReadings ? supabaseReadings.length : 45;
+  const remoteSourceByStation = useMemo(() => {
+    const sources: Partial<SourceByStation> = {};
+    for (const row of supabaseReadings) sources[row.station_id] = row.source;
+    return sources;
+  }, [supabaseReadings]);
+  const stations = useMemo(
+    () => localStations.map((station) => {
+      const latestReading = hasRemoteReadings ? history[station.id]?.at(-1) : undefined;
+      return latestReading ? { ...station, ntu: latestReading.ntu } : station;
+    }),
+    [hasRemoteReadings, history, localStations],
+  );
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       try {
         const stored = window.localStorage.getItem(STORAGE_KEY);
         if (stored) {
-          const parsed = JSON.parse(stored) as { stations?: StationState[]; history?: History; activeId?: string; recordCount?: number; sourceByStation?: SourceByStation };
-          if (parsed.stations?.length === defaultStations.length) setStations(parsed.stations);
-          if (parsed.history) setHistory(parsed.history);
+          const parsed = JSON.parse(stored) as { activeId?: string; sourceByStation?: SourceByStation };
           if (parsed.activeId) setActiveId(parsed.activeId);
-          if (parsed.recordCount) setRecordCount(parsed.recordCount);
           if (parsed.sourceByStation) setSourceByStation(parsed.sourceByStation);
         }
       } catch {
@@ -330,34 +366,26 @@ export default function Home() {
       }
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [defaultStations.length]);
+  }, []);
 
   useEffect(() => {
     if (!storageReady) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ stations, history, activeId, recordCount, sourceByStation }));
-  }, [stations, history, activeId, recordCount, sourceByStation, storageReady]);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ activeId, sourceByStation }));
+  }, [activeId, sourceByStation, storageReady]);
 
   useEffect(() => {
     if (!simulation) return;
     const timer = window.setInterval(() => {
-      setStations((current) => {
+      setLocalStations((current) => {
         const next = current.map((station) => {
           const anomalyEvent = Math.random() < 0.035 ? 20 + Math.random() * 26 : 0;
           const measured = station.ntu + (Math.random() - 0.5) * 3 + anomalyEvent;
           const corrected = measured + (station.baseline - measured) * 0.05;
           return { ...station, ntu: Math.max(1, Math.round(corrected * 10) / 10) };
         });
-        setHistory((currentHistory) => {
-          const nextHistory = { ...currentHistory };
-          next.forEach((station) => {
-            nextHistory[station.id] = [...(nextHistory[station.id] ?? []), makeReading(station.ntu, "simulation", "NTU-Logger demo")].slice(-MAX_HISTORY);
-          });
-          return nextHistory;
-        });
         return next;
       });
       setSourceByStation(Object.fromEntries(defaultStations.map((station) => [station.id, "simulation"])) as SourceByStation);
-      setRecordCount((current) => current + defaultStations.length);
     }, 4_000);
     return () => window.clearInterval(timer);
   }, [defaultStations, simulation]);
@@ -375,7 +403,7 @@ export default function Home() {
   const displayRangeHistory = activeRangeHistory.length >= 2 ? activeRangeHistory : activeHistory.slice(-2);
   const latest = activeHistory[activeHistory.length - 1];
   const updatedAt = latest?.timestamp ?? 0;
-  const activeSource = sourceByStation[activeStation.id] ?? "simulation";
+  const activeSource = remoteSourceByStation[activeStation.id] ?? sourceByStation[activeStation.id] ?? "simulation";
   const average = stations.reduce((sum, station) => sum + station.ntu, 0) / stations.length;
   const compliant = stations.filter((station) => station.ntu <= 25).length;
   const activeClass = classifyNtu(activeStation.ntu);
@@ -400,22 +428,33 @@ export default function Home() {
     setSection("analytics");
   }
 
-  function saveMeasurement(event: FormEvent<HTMLFormElement>) {
+  async function saveMeasurement(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!Number.isFinite(fieldValue) || fieldValue < 0 || fieldValue > 500) {
       setFieldError("Masukkan nilai antara 0 hingga 500 NTU.");
       return;
     }
-    const reading = makeReading(fieldValue, "manual", fieldEquipment);
-    const nextSeverity = getSeverity(reading.ntu, selectedFieldStation.baseline);
-    setStations((current) => current.map((station) => station.id === fieldStation ? { ...station, ntu: reading.ntu } : station));
-    setHistory((current) => ({ ...current, [fieldStation]: [...(current[fieldStation] ?? []), reading].slice(-MAX_HISTORY) }));
-    setSourceByStation((current) => ({ ...current, [fieldStation]: "manual" }));
-    setActiveId(fieldStation);
-    setRecordCount((current) => current + 1);
-    setFieldNtu("");
-    setFieldError("");
-    setToast(nextSeverity === "high" || nextSeverity === "critical" ? `Pengukuran disimpan. Alert ${SEVERITY_META[nextSeverity].label} aktif untuk ${selectedFieldStation.name}.` : `Pengukuran ${selectedFieldStation.name} disimpan secara lokal.`);
+    const nextSeverity = getSeverity(fieldValue, selectedFieldStation.baseline);
+    try {
+      await createDevelopmentReading({
+        station_id: fieldStation,
+        ntu: fieldValue,
+        source: "manual",
+        equipment: `${fieldEquipment} · TEST ONLY (local Field Mode)`,
+      });
+      await refetch();
+      setLocalStations((current) => current.map((station) => station.id === fieldStation ? { ...station, ntu: Math.round(fieldValue * 10) / 10 } : station));
+      setSourceByStation((current) => ({ ...current, [fieldStation]: "manual" }));
+      setSimulation(false);
+      setActiveId(fieldStation);
+      setFieldNtu("");
+      setFieldError("");
+      setToast(nextSeverity === "high" || nextSeverity === "critical" ? `Pengukuran uji disimpan. Alert ${SEVERITY_META[nextSeverity].label} aktif untuk ${selectedFieldStation.name}.` : `Pengukuran uji ${selectedFieldStation.name} berhasil disimpan ke Supabase.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Gagal menyimpan pengukuran.";
+      setFieldError(message);
+      setToast("Pengukuran belum tersimpan — periksa koneksi dan konfigurasi.");
+    }
   }
 
   function toggleComparison(id: string) {
@@ -455,15 +494,11 @@ export default function Home() {
   }
 
   function resetDemo() {
-    const resetStations = initialStationStates();
-    setStations(resetStations);
-    setHistory(seedHistory(resetStations));
-    setSourceByStation(Object.fromEntries(resetStations.map((station) => [station.id, "simulation"])) as SourceByStation);
+    setSourceByStation(Object.fromEntries(defaultStations.map((station) => [station.id, "simulation"])) as SourceByStation);
     setActiveId("malang");
     setFieldStation("malang");
-    setRecordCount(45);
     window.localStorage.removeItem(STORAGE_KEY);
-    setToast("Data lokal telah dikembalikan ke kondisi demo awal.");
+    setToast("Preferensi demo lokal telah direset. Pembacaan Supabase tidak dihapus.");
   }
 
   return (
@@ -493,7 +528,7 @@ export default function Home() {
           <div className="station-list">
             {stations.map((station) => <button key={station.id} onClick={() => { selectStation(station.id); setSection("monitor"); }} className={`station-item ${station.id === activeId ? "selected" : ""}`}><i style={{ background: insights[station.id].color }} /><span><b>{station.name}</b><small>{station.subtitle}</small></span><strong>{formatNtu(station.ntu)}</strong></button>)}
           </div>
-          <p className="local-note">◌ Local-first demo. Alert dan anomali bersifat simulasi serta perlu verifikasi lapangan.</p>
+          <p className="local-note">◌ Data demo tetap simulasi. Catatan Field Mode diberi sumber manual dan tetap perlu verifikasi lapangan.</p>
         </aside>
 
         <section className="content">
@@ -517,20 +552,20 @@ export default function Home() {
               <footer><span>Siklus demo · {formatTime(updatedAt)}</span><button onClick={() => setSection("field")}>Buka Field Mode untuk merekam →</button></footer>
             </section>
             <DataTrust source={activeSource} simulation={simulation} updatedAt={updatedAt} equipment={latest?.equipment ?? "NTU-Logger demo"} />
-            <div className="metric-grid"><article><Icon name="water" /><strong>{formatNtu(average)}</strong><span>Rata-rata sungai</span></article><article className="positive"><Icon name="check" /><strong>{compliant} / 5</strong><span>Sesuai Kelas II</span></article><article className={activeAlerts > 0 ? "attention" : ""}><Icon name="alert" /><strong>{activeAlerts}</strong><span>Alert aktif</span></article><article><Icon name="database" /><strong>{recordCount}</strong><span>Catatan lokal</span></article></div>
+            <div className="metric-grid"><article><Icon name="water" /><strong>{formatNtu(average)}</strong><span>Rata-rata sungai</span></article><article className="positive"><Icon name="check" /><strong>{compliant} / 5</strong><span>Sesuai Kelas II</span></article><article className={activeAlerts > 0 ? "attention" : ""}><Icon name="alert" /><strong>{activeAlerts}</strong><span>Alert aktif</span></article><article><Icon name="database" /><strong>{recordCount}</strong><span>{hasRemoteReadings ? "Catatan Supabase" : "Catatan demo"}</span></article></div>
             <AlertPanel stations={stations} insights={insights} onSelect={selectStation} onAnalytics={openAnalytics} />
             <div className="monitor-lower"><RiverMap stations={stations} insights={insights} activeId={activeId} filter={mapFilter} onFilter={setMapFilter} onSelect={selectStation} onOpenAnalytics={() => openAnalytics()} /><section className="field-callout"><Icon name="field" /><span>PENGUKURAN LAPANGAN</span><h2>Siap mencatat hasil turbidimeter?</h2><p>Field Mode dapat digunakan untuk memverifikasi titik yang mengalami alert atau perubahan tidak biasa.</p><button onClick={() => setSection("field")}>Buka Field Mode <b>→</b></button></section></div>
           </>}
 
           {section === "field" && <>
-            <section className="intro field-intro"><span className="mode-eyebrow"><Icon name="field" /> FIELD MODE</span><h1>Catat hasil<br />lapangan.</h1><p>Masukkan hasil turbidimeter secara terarah, lalu tinjau klasifikasi dan status peringatannya sebelum disimpan lokal.</p></section>
+            <section className="intro field-intro"><span className="mode-eyebrow"><Icon name="field" /> FIELD MODE</span><h1>Catat hasil<br />lapangan.</h1><p>Masukkan hasil turbidimeter secara terarah, lalu tinjau klasifikasi dan status peringatannya sebelum menyimpan catatan uji.</p></section>
             <div className="field-layout"><aside className="field-side"><div className="field-station"><span>STASIUN DIPILIH</span><strong>{selectedFieldStation.name}</strong><small>{selectedFieldStation.subtitle}</small></div><ol className="steps"><li className="done"><b>1</b><span>Pilih titik</span></li><li className={fieldNtu ? "done" : ""}><b>2</b><span>Masukkan NTU</span></li><li className={fieldClass ? "done" : ""}><b>3</b><span>Tinjau & simpan</span></li></ol><DataTrust source={activeSource} simulation={simulation} updatedAt={updatedAt} equipment={latest?.equipment ?? "NTU-Logger demo"} /></aside>
               <form className="field-form" onSubmit={saveMeasurement}>
                 <div className="form-grid"><label><span>STASIUN</span><select value={fieldStation} onChange={(event) => setFieldStation(event.target.value)}>{stations.map((station) => <option key={station.id} value={station.id}>{station.name} — {station.subtitle}</option>)}</select></label><label><span>ALAT</span><select value={fieldEquipment} onChange={(event) => setFieldEquipment(event.target.value as (typeof EQUIPMENT)[number])}>{EQUIPMENT.map((equipment) => <option key={equipment}>{equipment}</option>)}</select></label></div>
                 <label className="ntu-input"><span>KEKERUHAN TERBACA</span><div><input value={fieldNtu} onChange={(event) => { setFieldNtu(event.target.value); setFieldError(""); }} inputMode="decimal" placeholder="18.4" aria-describedby="ntu-help" /><b>NTU</b></div><small id="ntu-help">Masukkan angka antara 0–500 NTU. Gunakan satu desimal bila diperlukan.</small></label>
                 {fieldError && <p className="form-error">{fieldError}</p>}
                 <div className={`measurement-review ${fieldClass ? "ready" : ""}`}><div><span>TINJAU KLASIFIKASI</span><strong style={{ color: fieldClass?.color }}>{fieldClass ? `${formatNtu(fieldValue)} NTU · ${fieldClass.label} · Kelas ${fieldClass.grade}` : "Masukkan nilai NTU untuk melihat klasifikasi."}</strong></div><p>{fieldClass && (getSeverity(fieldValue, selectedFieldStation.baseline) === "high" || getSeverity(fieldValue, selectedFieldStation.baseline) === "critical") ? "Nilai ini akan memicu alert untuk ditinjau dan diverifikasi di lapangan." : "Status akhir tetap mengikuti prosedur verifikasi lapangan."}</p></div>
-                <button className="save-button" type="submit">Simpan pengukuran lokal <b>→</b></button><p className="form-footnote">◌ Catatan tersimpan di browser ini. Alert adalah indikator pola, bukan penetapan pencemaran.</p>
+                <button className="save-button" type="submit">Simpan pengukuran uji <b>→</b></button><p className="form-footnote">◌ Pada pengembangan lokal, catatan uji manual dikirim ke Supabase. Produksi akan memerlukan autentikasi petugas. Alert adalah indikator pola, bukan penetapan pencemaran.</p>
               </form></div>
           </>}
 
@@ -545,15 +580,15 @@ export default function Home() {
           </>}
 
           {section === "settings" && <>
-            <section className="intro"><span className="mode-eyebrow"><Icon name="settings" /> PENGATURAN</span><h1>Kendalikan cara<br />demo bekerja.</h1><p>Pengaturan lokal ini mengelola simulator, catatan browser, dan referensi klasifikasi untuk seluruh website.</p></section>
-            <div className="settings-layout"><section className="settings-card"><div className="setting-row"><span className="setting-icon"><Icon name="field" /></span><div><h2>Mode Simulasi</h2><p>{simulation ? "Aktif · nilai baru dibuat setiap 4 detik, termasuk contoh kenaikan mendadak untuk demonstrasi alert." : "Dijeda · nilai saat ini tetap dapat ditinjau."}</p></div><button className={`switch ${simulation ? "on" : ""}`} type="button" onClick={() => setSimulation((value) => !value)} role="switch" aria-checked={simulation}><i /></button></div><div className="setting-divider" /><div className="setting-row"><span className="setting-icon"><Icon name="database" /></span><div><h2>Data pada browser</h2><p>{recordCount} catatan tersedia secara lokal. Riwayat, alert, dan anomali tidak dikirim ke server.</p></div></div></section>
+            <section className="intro"><span className="mode-eyebrow"><Icon name="settings" /> PENGATURAN</span><h1>Kendalikan cara<br />demo bekerja.</h1><p>Pengaturan mengelola simulator, pembacaan Supabase yang tersedia, dan referensi klasifikasi untuk seluruh website.</p></section>
+            <div className="settings-layout"><section className="settings-card"><div className="setting-row"><span className="setting-icon"><Icon name="field" /></span><div><h2>Mode Simulasi</h2><p>{simulation ? "Aktif · nilai baru dibuat setiap 4 detik, termasuk contoh kenaikan mendadak untuk demonstrasi alert." : "Dijeda · nilai saat ini tetap dapat ditinjau."}</p></div><button className={`switch ${simulation ? "on" : ""}`} type="button" onClick={() => setSimulation((value) => !value)} role="switch" aria-checked={simulation}><i /></button></div><div className="setting-divider" /><div className="setting-row"><span className="setting-icon"><Icon name="database" /></span><div><h2>{hasRemoteReadings ? "Data pada Supabase" : "Data demo lokal"}</h2><p>{hasRemoteReadings ? `${recordCount} catatan tersedia dari Supabase. Pembacaan manual tetap memerlukan verifikasi.` : "Riwayat simulasi dipakai sebagai fallback sampai pembacaan Supabase tersedia."}</p></div></div></section>
               <section className="surface-card thresholds"><div className="card-heading"><div><h2>Aturan status</h2><p>Alert memakai nilai NTU dan penyimpangan terhadap baseline; hasilnya tetap memerlukan verifikasi.</p></div></div>{[["Normal", "dalam pola", "#2D6A5C"], ["Warning", ">25 NTU / deviasi", "#A27719"], ["High", "≥50 NTU", "#C4622D"], ["Critical", "≥75 NTU", "#8B3A1F"]].map(([label, range, color]) => <div key={label} className="threshold-row"><i style={{ background: color }} /><span>{label}</span><b>{range}</b></div>)}</section></div>
             <button className="reset-button" type="button" onClick={resetDemo}><Icon name="restart" /><span><b>Reset data demo</b><small>Kembalikan nilai stasiun, riwayat 90 hari simulasi, dan alert lokal ke kondisi awal.</small></span><strong>→</strong></button>
           </>}
         </section>
       </div>
       {toast && <div className="toast" role="status">✓ {toast}</div>}
-      <footer className="app-footer">Jernih Brantas · Next.js + TypeScript · <span>DEMO LOCAL-FIRST</span></footer>
+      <footer className="app-footer">Jernih Brantas · Next.js + TypeScript · <span>SUPABASE + DEMO</span></footer>
     </main>
   );
 }
