@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 
-type ReadingSource = "sensor" | "manual" | "simulation";
+type ReadingSource = "sensor" | "simulation";
 
 type CreateReadingBody = {
   station_id: string;
@@ -11,7 +11,7 @@ type CreateReadingBody = {
   equipment?: string;
 };
 
-const VALID_SOURCES: ReadingSource[] = ["sensor", "manual", "simulation"];
+const VALID_SOURCES: ReadingSource[] = ["sensor", "simulation"];
 
 function hasValidIngestKey(request: NextRequest) {
   const expected = process.env.JERNIH_INGEST_API_KEY;
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * Protected ingestion endpoint for a future ESP32 gateway or trusted service.
- * Browser-based Field Mode will use Supabase Auth in the next integration phase.
+ * Manual Field Mode writes use Supabase Auth and database RLS directly.
  */
 export async function POST(request: NextRequest) {
   if (!hasValidIngestKey(request)) {

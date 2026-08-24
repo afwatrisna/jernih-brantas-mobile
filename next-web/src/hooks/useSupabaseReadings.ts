@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import type { RealtimePostgresInsertPayload } from "@supabase/supabase-js";
 
 import { getSupabaseClient } from "@/lib/supabase-client";
+import type { Database } from "@/lib/supabase-types";
 
 export type ReadingSource = "sensor" | "manual" | "simulation";
 
@@ -16,8 +18,8 @@ export type SupabaseReading = {
 };
 
 /**
- * Loads the public monitoring history and subscribes to new permitted readings.
- * The dashboard will adopt this hook when local demo persistence is replaced.
+ * Loads public monitoring history and subscribes to permitted new readings.
+ * Local simulation remains an explicit fallback for stations without cloud data.
  */
 export function useSupabaseReadings() {
   const [readings, setReadings] = useState<SupabaseReading[]>([]);
@@ -61,7 +63,7 @@ export function useSupabaseReadings() {
 
     const channel = supabase
       .channel("jernih-readings-changes")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "readings" }, (payload) => {
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "readings" }, (payload: RealtimePostgresInsertPayload<Database["public"]["Tables"]["readings"]["Row"]>) => {
         setReadings((current) => [...current, payload.new as SupabaseReading]);
       })
       .subscribe();

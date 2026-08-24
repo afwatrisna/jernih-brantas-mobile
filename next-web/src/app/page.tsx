@@ -12,7 +12,8 @@ import {
   type StationState,
 } from "../lib/jernih-data";
 import { useSupabaseReadings, type SupabaseReading } from "../hooks/useSupabaseReadings";
-import { createDevelopmentReading } from "../lib/readings-client";
+import { useFieldModeAccess } from "../hooks/useFieldModeAccess";
+import { createAuthenticatedManualReading } from "../lib/readings-client";
 
 function toReading(row: SupabaseReading): Reading {
   return {
@@ -315,6 +316,9 @@ export default function Home() {
   const [fieldNtu, setFieldNtu] = useState("");
   const [fieldEquipment, setFieldEquipment] = useState<(typeof EQUIPMENT)[number]>(EQUIPMENT[0]);
   const [fieldError, setFieldError] = useState("");
+  const [fieldAuthEmail, setFieldAuthEmail] = useState("");
+  const [fieldAuthMessage, setFieldAuthMessage] = useState("");
+  const [fieldAuthSubmitting, setFieldAuthSubmitting] = useState(false);
   const [toast, setToast] = useState("");
   const [storageReady, setStorageReady] = useState(false);
   const [mapFilter, setMapFilter] = useState<MapFilter>("all");
@@ -412,6 +416,11 @@ export default function Home() {
   const selectedFieldStation = stations.find((station) => station.id === fieldStation) ?? activeStation;
   const fieldValue = Number.parseFloat(fieldNtu.replace(",", "."));
   const fieldClass = Number.isFinite(fieldValue) ? classifyNtu(fieldValue) : null;
+  const { access: fieldAccess, loading: fieldAccessLoading, issue: fieldAccessIssue, requestMagicLink, signOut: signOutFieldMode } = useFieldModeAccess();
+  const canWriteFieldMode = Boolean(
+    fieldAccess
+      && (fieldAccess.role === "admin" || (fieldAccess.role === "field_operator" && fieldAccess.stationIds.includes(fieldStation))),
+  );
   const rangeValues = displayRangeHistory.map((reading) => reading.ntu);
   const rangeAverage = rangeValues.reduce((sum, value) => sum + value, 0) / Math.max(1, rangeValues.length);
   const rangeMin = Math.min(...rangeValues);
@@ -428,19 +437,39 @@ export default function Home() {
     setSection("analytics");
   }
 
+  async function requestFieldModeAccess() {
+    setFieldAuthSubmitting(true);
+    setFieldAuthMessage("");
+    try {
+      await requestMagicLink(fieldAuthEmail);
+      setFieldAuthMessage("Tautan masuk telah dikirim. Buka email tersebut, lalu kembali ke Field Mode.");
+    } catch (error) {
+      setFieldAuthMessage(error instanceof Error ? error.message : "Tautan masuk tidak dapat dikirim.");
+    } finally {
+      setFieldAuthSubmitting(false);
+    }
+  }
+
   async function saveMeasurement(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!fieldAccess) {
+      setFieldError("Masuk sebagai petugas yang ditugaskan sebelum menyimpan pengukuran.");
+      return;
+    }
+    if (!canWriteFieldMode) {
+      setFieldError(`Akun ini belum memiliki izin Field Mode untuk ${selectedFieldStation.name}.`);
+      return;
+    }
     if (!Number.isFinite(fieldValue) || fieldValue < 0 || fieldValue > 500) {
       setFieldError("Masukkan nilai antara 0 hingga 500 NTU.");
       return;
     }
     const nextSeverity = getSeverity(fieldValue, selectedFieldStation.baseline);
     try {
-      await createDevelopmentReading({
+      await createAuthenticatedManualReading({
         station_id: fieldStation,
         ntu: fieldValue,
-        source: "manual",
-        equipment: `${fieldEquipment} · TEST ONLY (local Field Mode)`,
+        equipment: fieldEquipment,
       });
       await refetch();
       setLocalStations((current) => current.map((station) => station.id === fieldStation ? { ...station, ntu: Math.round(fieldValue * 10) / 10 } : station));
@@ -449,7 +478,7 @@ export default function Home() {
       setActiveId(fieldStation);
       setFieldNtu("");
       setFieldError("");
-      setToast(nextSeverity === "high" || nextSeverity === "critical" ? `Pengukuran uji disimpan. Alert ${SEVERITY_META[nextSeverity].label} aktif untuk ${selectedFieldStation.name}.` : `Pengukuran uji ${selectedFieldStation.name} berhasil disimpan ke Supabase.`);
+      setToast(nextSeverity === "high" || nextSeverity === "critical" ? `Pengukuran lapangan disimpan. Alert ${SEVERITY_META[nextSeverity].label} aktif untuk ${selectedFieldStation.name}.` : `Pengukuran lapangan ${selectedFieldStation.name} berhasil disimpan ke Supabase.`);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Gagal menyimpan pengukuran.";
       setFieldError(message);
@@ -558,14 +587,19 @@ export default function Home() {
           </>}
 
           {section === "field" && <>
-            <section className="intro field-intro"><span className="mode-eyebrow"><Icon name="field" /> FIELD MODE</span><h1>Catat hasil<br />lapangan.</h1><p>Masukkan hasil turbidimeter secara terarah, lalu tinjau klasifikasi dan status peringatannya sebelum menyimpan catatan uji.</p></section>
+            <section className="intro field-intro"><span className="mode-eyebrow"><Icon name="field" /> FIELD MODE</span><h1>Catat hasil<br />lapangan.</h1><p>Masukkan hasil turbidimeter secara terarah, lalu tinjau klasifikasi dan status peringatannya sebelum menyimpan catatan lapangan.</p></section>
             <div className="field-layout"><aside className="field-side"><div className="field-station"><span>STASIUN DIPILIH</span><strong>{selectedFieldStation.name}</strong><small>{selectedFieldStation.subtitle}</small></div><ol className="steps"><li className="done"><b>1</b><span>Pilih titik</span></li><li className={fieldNtu ? "done" : ""}><b>2</b><span>Masukkan NTU</span></li><li className={fieldClass ? "done" : ""}><b>3</b><span>Tinjau & simpan</span></li></ol><DataTrust source={activeSource} simulation={simulation} updatedAt={updatedAt} equipment={latest?.equipment ?? "NTU-Logger demo"} /></aside>
               <form className="field-form" onSubmit={saveMeasurement}>
+                <div className="field-access" aria-live="polite">
+                  <div><span>AKSES PETUGAS</span>{fieldAccessLoading ? <strong>Memeriksa sesi Supabase…</strong> : fieldAccess ? <><strong>{fieldAccess.displayName || fieldAccess.email}</strong><small>{fieldAccess.role === "admin" ? "Administrator · semua stasiun" : fieldAccess.role === "field_operator" ? `Petugas lapangan · ${fieldAccess.stationIds.length} stasiun ditugaskan` : "Akun masuk · menunggu penugasan Field Mode"}</small></> : <><strong>Masuk diperlukan</strong><small>Hanya petugas yang ditugaskan dapat menyimpan input manual.</small></>}</div>
+                  {fieldAccess ? <button className="field-auth-action" type="button" onClick={() => void signOutFieldMode()}>Keluar</button> : <div className="field-auth-controls"><input value={fieldAuthEmail} onChange={(event) => setFieldAuthEmail(event.target.value)} type="email" inputMode="email" placeholder="email.petugas@instansi.id" aria-label="Email petugas" /><button className="field-auth-action" type="button" disabled={fieldAuthSubmitting} onClick={() => void requestFieldModeAccess()}>{fieldAuthSubmitting ? "Mengirim…" : "Kirim tautan masuk"}</button></div>}
+                  {(fieldAuthMessage || fieldAccessIssue) && <p>{fieldAuthMessage || fieldAccessIssue}</p>}
+                </div>
                 <div className="form-grid"><label><span>STASIUN</span><select value={fieldStation} onChange={(event) => setFieldStation(event.target.value)}>{stations.map((station) => <option key={station.id} value={station.id}>{station.name} — {station.subtitle}</option>)}</select></label><label><span>ALAT</span><select value={fieldEquipment} onChange={(event) => setFieldEquipment(event.target.value as (typeof EQUIPMENT)[number])}>{EQUIPMENT.map((equipment) => <option key={equipment}>{equipment}</option>)}</select></label></div>
                 <label className="ntu-input"><span>KEKERUHAN TERBACA</span><div><input value={fieldNtu} onChange={(event) => { setFieldNtu(event.target.value); setFieldError(""); }} inputMode="decimal" placeholder="18.4" aria-describedby="ntu-help" /><b>NTU</b></div><small id="ntu-help">Masukkan angka antara 0–500 NTU. Gunakan satu desimal bila diperlukan.</small></label>
                 {fieldError && <p className="form-error">{fieldError}</p>}
                 <div className={`measurement-review ${fieldClass ? "ready" : ""}`}><div><span>TINJAU KLASIFIKASI</span><strong style={{ color: fieldClass?.color }}>{fieldClass ? `${formatNtu(fieldValue)} NTU · ${fieldClass.label} · Kelas ${fieldClass.grade}` : "Masukkan nilai NTU untuk melihat klasifikasi."}</strong></div><p>{fieldClass && (getSeverity(fieldValue, selectedFieldStation.baseline) === "high" || getSeverity(fieldValue, selectedFieldStation.baseline) === "critical") ? "Nilai ini akan memicu alert untuk ditinjau dan diverifikasi di lapangan." : "Status akhir tetap mengikuti prosedur verifikasi lapangan."}</p></div>
-                <button className="save-button" type="submit">Simpan pengukuran uji <b>→</b></button><p className="form-footnote">◌ Pada pengembangan lokal, catatan uji manual dikirim ke Supabase. Produksi akan memerlukan autentikasi petugas. Alert adalah indikator pola, bukan penetapan pencemaran.</p>
+                <button className="save-button" type="submit" disabled={!canWriteFieldMode || fieldAccessLoading}>{fieldAccessLoading ? "Memeriksa akses…" : canWriteFieldMode ? <>Simpan pengukuran lapangan <b>→</b></> : <>Masuk sebagai petugas untuk menyimpan <b>→</b></>}</button><p className="form-footnote">◌ Catatan manual hanya dapat dikirim melalui akun petugas yang diberi peran dan penugasan stasiun. Alert adalah indikator pola, bukan penetapan pencemaran.</p>
               </form></div>
           </>}
 
