@@ -1,4 +1,3 @@
-import { classifyNtu } from "./monitoring/classification";
 import type { Station, StationState } from "./monitoring/types";
 
 export type { Reading, ReadingSource, Station, StationState, WaterClass } from "./monitoring/types";
@@ -25,7 +24,3 @@ export const formatNtu = (ntu: number) => ntu.toFixed(1);
 
 export const formatTime = (timestamp: number) =>
   new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(timestamp);
-
-// Compatibility export during the incremental refactor. Existing consumers can
-// continue importing from jernih-data while the domain rule lives in monitoring/.
-void classifyNtu;
