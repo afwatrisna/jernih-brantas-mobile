@@ -57,3 +57,6 @@
 - [x] Remove the “Siklus demo” label from the responsive Monitor hero card.
 - [x] Implement Supabase Auth profiles, station roles, and RLS-protected Field Mode writes.
 - [ ] Configure Supabase Auth redirect URLs, create the first staff account, and assign its Field Mode role and station membership.
+- [ ] Configure Vercel environment variables for the Supabase-enabled Next.js production build and validate the deployed Field Mode access boundary.
+- [ ] Resume Vercel production configuration after the account security verification and password-change flow is complete.
+- [x] Deliver an Indonesian guide for manual Supabase Auth, Vercel environment, deployment, and first-staff activation.
