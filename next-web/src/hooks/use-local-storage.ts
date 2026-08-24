@@ -6,10 +6,13 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
   const [value, setValue] = useState<T>(initialValue);
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(key);
-      if (raw !== null) setValue(JSON.parse(raw) as T);
-    } catch { /* keep initial value */ }
+    const hydrationTask = window.setTimeout(() => {
+      try {
+        const raw = window.localStorage.getItem(key);
+        if (raw !== null) setValue(JSON.parse(raw) as T);
+      } catch { /* keep initial value */ }
+    }, 0);
+    return () => window.clearTimeout(hydrationTask);
   }, [key]);
 
   const update = useCallback((next: T | ((current: T) => T)) => {
