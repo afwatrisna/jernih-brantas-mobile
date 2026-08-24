@@ -549,7 +549,7 @@ export default function Home() {
               <div className="class-pill" style={{ background: activeClass.softColor, color: activeClass.color }}><i style={{ background: activeClass.color }} />{activeClass.label} · Kelas {activeClass.grade}</div>
               <div className="hero-status"><StatusBadge insight={activeInsight} compact />{activeInsight.anomaly && <span>↗ {activeInsight.anomaly}</span>}</div>
               <div className="gauge"><div className="gauge-track"><i style={{ height: `${Math.min(100, Math.max(4, activeStation.ntu))}%` }} /></div><span>100</span><span>50</span><span>0</span></div>
-              <footer><span>Siklus demo · {formatTime(updatedAt)}</span><button onClick={() => setSection("field")}>Buka Field Mode untuk merekam →</button></footer>
+              <footer><button onClick={() => setSection("field")}>Buka Field Mode untuk merekam →</button></footer>
             </section>
             <DataTrust source={activeSource} simulation={simulation} updatedAt={updatedAt} equipment={latest?.equipment ?? "NTU-Logger demo"} />
             <div className="metric-grid"><article><Icon name="water" /><strong>{formatNtu(average)}</strong><span>Rata-rata sungai</span></article><article className="positive"><Icon name="check" /><strong>{compliant} / 5</strong><span>Sesuai Kelas II</span></article><article className={activeAlerts > 0 ? "attention" : ""}><Icon name="alert" /><strong>{activeAlerts}</strong><span>Alert aktif</span></article><article><Icon name="database" /><strong>{recordCount}</strong><span>{hasRemoteReadings ? "Catatan Supabase" : "Catatan demo"}</span></article></div>

@@ -54,3 +54,4 @@
 - [x] Run the Supabase-integrated Next.js build locally and inspect its initial page and browser console.
 - [x] Integrate the supplied Supabase page-data changes into the stable Next.js dashboard.
 - [x] Validate a clearly labelled Field Mode test submission, success feedback, and its resulting record in Supabase.
+- [x] Remove the “Siklus demo” label from the responsive Monitor hero card.
