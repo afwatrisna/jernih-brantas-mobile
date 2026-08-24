@@ -315,7 +315,7 @@ export default function Home() {
 
           {section === "monitor" && <>
             <section className="intro"><span className="mode-eyebrow"><Icon name="water" /> MONITOR MODE</span><h1>Kondisi sungai,<br />lebih mudah dipahami.</h1><p>Pantau kejernihan air di titik penting Sungai Brantas, lalu pindah ke Field Mode saat petugas perlu mencatat hasil lapangan.</p></section>
-            <div className="mobile-stations">{stations.slice(0, 3).map((station) => <button key={station.id} onClick={() => selectStation(station.id)} className={station.id === activeId ? "selected" : ""}><b>{station.name}</b><span>{formatNtu(station.ntu)} NTU</span></button>)}</div>
+            <div className="mobile-stations">{stations.map((station) => <button key={station.id} onClick={() => selectStation(station.id)} className={station.id === activeId ? "selected" : ""}><b>{station.name}</b><span>{formatNtu(station.ntu)} NTU</span></button>)}</div>
             <section className="hero-card">
               <div><span className="hero-river">SUNGAI BRANTAS · {activeStation.subtitle.toUpperCase()}</span><h2>{activeStation.name}</h2></div>
               <span className={`live-status ${simulation ? "live" : "paused"}`}><i />{simulation ? "SIMULASI AKTIF" : "SIMULASI DIJEDA"}</span>
