@@ -46,3 +46,8 @@
 - [x] Add Mojokerto and Surabaya Hilir to the selectable mobile station cards in the Next.js Monitor view.
 - [x] Compare affordable hardware for additional water-quality parameters alongside turbidity.
 - [x] Add connected alert, anomaly, interactive map, historical-trend, comparison, and CSV-export capabilities to the Next.js monitoring website.
+- [ ] Diagnose and fix the newly reported Vercel deployment error on the refactor branch.
+- [x] Pause the refactor branch and keep `main` stable until database integration is ready.
+- [ ] Design and implement the database layer before resuming the full architecture refactor.
+- [ ] Implement the database, authentication, and authorization foundation with Supabase.
+- [x] Safely apply the supplied Supabase integration package, validate the authorized database project, and synchronize the Next.js source to GitHub.
