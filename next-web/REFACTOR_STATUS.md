@@ -11,7 +11,7 @@ Branch: `refactor/next-web-architecture-v1`
 - Data-trust logic isolated.
 - API client/contracts boundary established.
 - Monitoring feature boundary established.
-- Unit-test foundation added with Vitest.
+- Production build no longer includes a Vitest test-runner dependency or test globals.
 
 ## Remaining integration work
 
@@ -19,4 +19,4 @@ The legacy `src/app/page.tsx` is intentionally kept as the compatibility UI duri
 
 ## Validation note
 
-This branch has not been executed in a local CI runner by the GitHub connector. Run `pnpm install`, `pnpm lint`, `pnpm test`, and `pnpm build` from `next-web/` before merging.
+Validated locally on 2026-08-24 with `pnpm install --frozen-lockfile`, `pnpm lint`, and `pnpm build`. This branch currently has no `test` script; add a dedicated test runner only when its configuration is intentionally included in the deployment workflow.
