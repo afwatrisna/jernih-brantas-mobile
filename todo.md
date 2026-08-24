@@ -44,3 +44,5 @@
 - [x] Explain the programming languages and file roles used in the deployed Jernih Brantas application.
 - [x] Create and deliver a clean ZIP archive of the `next-web` Next.js project.
 - [x] Add Mojokerto and Surabaya Hilir to the selectable mobile station cards in the Next.js Monitor view.
+- [x] Compare affordable hardware for additional water-quality parameters alongside turbidity.
+- [x] Add connected alert, anomaly, interactive map, historical-trend, comparison, and CSV-export capabilities to the Next.js monitoring website.
