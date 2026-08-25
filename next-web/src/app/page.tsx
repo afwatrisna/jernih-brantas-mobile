@@ -14,6 +14,7 @@ import {
 import { useSupabaseReadings, type SupabaseReading } from "../hooks/useSupabaseReadings";
 import { useFieldModeAccess } from "../hooks/useFieldModeAccess";
 import { createAuthenticatedManualReading } from "../lib/readings-client";
+import { AssistantPanel } from "../components/assistant-panel";
 
 function toReading(row: SupabaseReading): Reading {
   return {
@@ -584,6 +585,7 @@ export default function Home() {
             </section>
               <DataTrust source={activeSource} simulation={simulation} updatedAt={updatedAt} equipment={demoDisplayMode ? "NTU-Logger demo" : latest?.equipment ?? "NTU-Logger demo"} />
             <div className="metric-grid"><article><Icon name="water" /><strong>{formatNtu(average)}</strong><span>Rata-rata sungai</span></article><article className="positive"><Icon name="check" /><strong>{compliant} / 5</strong><span>Sesuai Kelas II</span></article><article className={activeAlerts > 0 ? "attention" : ""}><Icon name="alert" /><strong>{activeAlerts}</strong><span>Alert aktif</span></article><article><Icon name="database" /><strong>{recordCount}</strong><span>{demoDisplayMode ? "Catatan demo aktif" : hasRemoteReadings ? "Catatan Supabase" : "Catatan demo"}</span></article></div>
+            <AssistantPanel station={activeStation} source={activeSource} simulationEnabled={simulation} demoDisplayMode={demoDisplayMode} access={fieldAccess} accessLoading={fieldAccessLoading} onOpenFieldMode={() => setSection("field")} />
             <AlertPanel stations={stations} insights={insights} onSelect={selectStation} onAnalytics={openAnalytics} />
             <div className="monitor-lower"><RiverMap stations={stations} insights={insights} activeId={activeId} filter={mapFilter} onFilter={setMapFilter} onSelect={selectStation} onOpenAnalytics={() => openAnalytics()} /><section className="field-callout"><Icon name="field" /><span>PENGUKURAN LAPANGAN</span><h2>Siap mencatat hasil turbidimeter?</h2><p>Field Mode dapat digunakan untuk memverifikasi titik yang mengalami alert atau perubahan tidak biasa.</p><button onClick={() => setSection("field")}>Buka Field Mode <b>→</b></button></section></div>
           </>}
