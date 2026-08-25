@@ -61,3 +61,4 @@
 - [ ] Resume Vercel production configuration after the account security verification and password-change flow is complete.
 - [x] Deliver an Indonesian guide for manual Supabase Auth, Vercel environment, deployment, and first-staff activation.
 - [x] Preserve a clearly labelled simulation dataset and explicit demo mode for tomorrow’s dashboard demonstration.
+- [x] Set Mode Simulasi and Data demo untuk presentasi to default off on first dashboard load.

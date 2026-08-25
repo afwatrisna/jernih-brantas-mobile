@@ -310,8 +310,8 @@ export default function Home() {
   const { readings: supabaseReadings, loading: readingsLoading, refetch } = useSupabaseReadings();
   const [activeId, setActiveId] = useState("malang");
   const [section, setSection] = useState<Section>("monitor");
-  const [simulation, setSimulation] = useState(true);
-  const [demoDisplayMode, setDemoDisplayMode] = useState(true);
+  const [simulation, setSimulation] = useState(false);
+  const [demoDisplayMode, setDemoDisplayMode] = useState(false);
   const [sourceByStation, setSourceByStation] = useState<SourceByStation>(() => Object.fromEntries(defaultStations.map((station) => [station.id, "simulation"])) as SourceByStation);
   const [fieldStation, setFieldStation] = useState("malang");
   const [fieldNtu, setFieldNtu] = useState("");
