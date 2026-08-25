@@ -60,3 +60,4 @@
 - [ ] Configure Vercel environment variables for the Supabase-enabled Next.js production build and validate the deployed Field Mode access boundary.
 - [ ] Resume Vercel production configuration after the account security verification and password-change flow is complete.
 - [x] Deliver an Indonesian guide for manual Supabase Auth, Vercel environment, deployment, and first-staff activation.
+- [x] Preserve a clearly labelled simulation dataset and explicit demo mode for tomorrow’s dashboard demonstration.

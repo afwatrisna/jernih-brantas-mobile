@@ -311,6 +311,7 @@ export default function Home() {
   const [activeId, setActiveId] = useState("malang");
   const [section, setSection] = useState<Section>("monitor");
   const [simulation, setSimulation] = useState(true);
+  const [demoDisplayMode, setDemoDisplayMode] = useState(true);
   const [sourceByStation, setSourceByStation] = useState<SourceByStation>(() => Object.fromEntries(defaultStations.map((station) => [station.id, "simulation"])) as SourceByStation);
   const [fieldStation, setFieldStation] = useState("malang");
   const [fieldNtu, setFieldNtu] = useState("");
@@ -340,6 +341,7 @@ export default function Home() {
     return grouped;
   }, [defaultStations, fallbackHistory, readingsLoading, supabaseReadings]);
   const hasRemoteReadings = supabaseReadings.length > 0;
+  const displaySupabaseReadings = hasRemoteReadings && !demoDisplayMode;
   const recordCount = hasRemoteReadings ? supabaseReadings.length : 45;
   const remoteSourceByStation = useMemo(() => {
     const sources: Partial<SourceByStation> = {};
@@ -348,10 +350,10 @@ export default function Home() {
   }, [supabaseReadings]);
   const stations = useMemo(
     () => localStations.map((station) => {
-      const latestReading = hasRemoteReadings ? history[station.id]?.at(-1) : undefined;
+      const latestReading = displaySupabaseReadings ? history[station.id]?.at(-1) : undefined;
       return latestReading ? { ...station, ntu: latestReading.ntu } : station;
     }),
-    [hasRemoteReadings, history, localStations],
+    [displaySupabaseReadings, history, localStations],
   );
 
   useEffect(() => {
@@ -407,7 +409,7 @@ export default function Home() {
   const displayRangeHistory = activeRangeHistory.length >= 2 ? activeRangeHistory : activeHistory.slice(-2);
   const latest = activeHistory[activeHistory.length - 1];
   const updatedAt = latest?.timestamp ?? 0;
-  const activeSource = remoteSourceByStation[activeStation.id] ?? sourceByStation[activeStation.id] ?? "simulation";
+  const activeSource = demoDisplayMode ? "simulation" : remoteSourceByStation[activeStation.id] ?? sourceByStation[activeStation.id] ?? "simulation";
   const average = stations.reduce((sum, station) => sum + station.ntu, 0) / stations.length;
   const compliant = stations.filter((station) => station.ntu <= 25).length;
   const activeClass = classifyNtu(activeStation.ntu);
@@ -580,8 +582,8 @@ export default function Home() {
               <div className="gauge"><div className="gauge-track"><i style={{ height: `${Math.min(100, Math.max(4, activeStation.ntu))}%` }} /></div><span>100</span><span>50</span><span>0</span></div>
               <footer><button onClick={() => setSection("field")}>Buka Field Mode untuk merekam →</button></footer>
             </section>
-            <DataTrust source={activeSource} simulation={simulation} updatedAt={updatedAt} equipment={latest?.equipment ?? "NTU-Logger demo"} />
-            <div className="metric-grid"><article><Icon name="water" /><strong>{formatNtu(average)}</strong><span>Rata-rata sungai</span></article><article className="positive"><Icon name="check" /><strong>{compliant} / 5</strong><span>Sesuai Kelas II</span></article><article className={activeAlerts > 0 ? "attention" : ""}><Icon name="alert" /><strong>{activeAlerts}</strong><span>Alert aktif</span></article><article><Icon name="database" /><strong>{recordCount}</strong><span>{hasRemoteReadings ? "Catatan Supabase" : "Catatan demo"}</span></article></div>
+              <DataTrust source={activeSource} simulation={simulation} updatedAt={updatedAt} equipment={demoDisplayMode ? "NTU-Logger demo" : latest?.equipment ?? "NTU-Logger demo"} />
+            <div className="metric-grid"><article><Icon name="water" /><strong>{formatNtu(average)}</strong><span>Rata-rata sungai</span></article><article className="positive"><Icon name="check" /><strong>{compliant} / 5</strong><span>Sesuai Kelas II</span></article><article className={activeAlerts > 0 ? "attention" : ""}><Icon name="alert" /><strong>{activeAlerts}</strong><span>Alert aktif</span></article><article><Icon name="database" /><strong>{recordCount}</strong><span>{demoDisplayMode ? "Catatan demo aktif" : hasRemoteReadings ? "Catatan Supabase" : "Catatan demo"}</span></article></div>
             <AlertPanel stations={stations} insights={insights} onSelect={selectStation} onAnalytics={openAnalytics} />
             <div className="monitor-lower"><RiverMap stations={stations} insights={insights} activeId={activeId} filter={mapFilter} onFilter={setMapFilter} onSelect={selectStation} onOpenAnalytics={() => openAnalytics()} /><section className="field-callout"><Icon name="field" /><span>PENGUKURAN LAPANGAN</span><h2>Siap mencatat hasil turbidimeter?</h2><p>Field Mode dapat digunakan untuk memverifikasi titik yang mengalami alert atau perubahan tidak biasa.</p><button onClick={() => setSection("field")}>Buka Field Mode <b>→</b></button></section></div>
           </>}
@@ -614,8 +616,8 @@ export default function Home() {
           </>}
 
           {section === "settings" && <>
-            <section className="intro"><span className="mode-eyebrow"><Icon name="settings" /> PENGATURAN</span><h1>Kendalikan cara<br />demo bekerja.</h1><p>Pengaturan mengelola simulator, pembacaan Supabase yang tersedia, dan referensi klasifikasi untuk seluruh website.</p></section>
-            <div className="settings-layout"><section className="settings-card"><div className="setting-row"><span className="setting-icon"><Icon name="field" /></span><div><h2>Mode Simulasi</h2><p>{simulation ? "Aktif · nilai baru dibuat setiap 4 detik, termasuk contoh kenaikan mendadak untuk demonstrasi alert." : "Dijeda · nilai saat ini tetap dapat ditinjau."}</p></div><button className={`switch ${simulation ? "on" : ""}`} type="button" onClick={() => setSimulation((value) => !value)} role="switch" aria-checked={simulation}><i /></button></div><div className="setting-divider" /><div className="setting-row"><span className="setting-icon"><Icon name="database" /></span><div><h2>{hasRemoteReadings ? "Data pada Supabase" : "Data demo lokal"}</h2><p>{hasRemoteReadings ? `${recordCount} catatan tersedia dari Supabase. Pembacaan manual tetap memerlukan verifikasi.` : "Riwayat simulasi dipakai sebagai fallback sampai pembacaan Supabase tersedia."}</p></div></div></section>
+            <section className="intro"><span className="mode-eyebrow"><Icon name="settings" /> PENGATURAN</span><h1>Kendalikan cara<br />demo bekerja.</h1><p>Pengaturan mengelola simulator, pilihan tampilan demo, pembacaan Supabase yang tersedia, dan referensi klasifikasi untuk seluruh website.</p></section>
+            <div className="settings-layout"><section className="settings-card"><div className="setting-row"><span className="setting-icon"><Icon name="field" /></span><div><h2>Mode Simulasi</h2><p>{simulation ? "Aktif · nilai baru dibuat setiap 4 detik, termasuk contoh kenaikan mendadak untuk demonstrasi alert." : "Dijeda · nilai saat ini tetap dapat ditinjau."}</p></div><button className={`switch ${simulation ? "on" : ""}`} type="button" onClick={() => setSimulation((value) => !value)} role="switch" aria-checked={simulation}><i /></button></div><div className="setting-divider" /><div className="setting-row"><span className="setting-icon"><Icon name="water" /></span><div><h2>Data demo untuk presentasi</h2><p>{demoDisplayMode ? "Aktif · Monitor dan Analitik memakai simulasi lokal yang jelas diberi label. Catatan Supabase tetap tersimpan dan tidak dihapus." : "Nonaktif · Monitor dan Analitik menampilkan pembacaan terbaru yang tersedia dari Supabase."}</p></div><button className={`switch ${demoDisplayMode ? "on" : ""}`} type="button" onClick={() => setDemoDisplayMode((value) => !value)} role="switch" aria-checked={demoDisplayMode}><i /></button></div><div className="setting-divider" /><div className="setting-row"><span className="setting-icon"><Icon name="database" /></span><div><h2>{hasRemoteReadings ? "Data pada Supabase" : "Data demo lokal"}</h2><p>{hasRemoteReadings ? `${recordCount} catatan tersedia dari Supabase. ${demoDisplayMode ? "Mode demo sedang menampilkannya sebagai data terpisah." : "Pembacaan manual tetap memerlukan verifikasi."}` : "Riwayat simulasi dipakai sebagai fallback sampai pembacaan Supabase tersedia."}</p></div></div></section>
               <section className="surface-card thresholds"><div className="card-heading"><div><h2>Aturan status</h2><p>Alert memakai nilai NTU dan penyimpangan terhadap baseline; hasilnya tetap memerlukan verifikasi.</p></div></div>{[["Normal", "dalam pola", "#2D6A5C"], ["Warning", ">25 NTU / deviasi", "#A27719"], ["High", "≥50 NTU", "#C4622D"], ["Critical", "≥75 NTU", "#8B3A1F"]].map(([label, range, color]) => <div key={label} className="threshold-row"><i style={{ background: color }} /><span>{label}</span><b>{range}</b></div>)}</section></div>
             <button className="reset-button" type="button" onClick={resetDemo}><Icon name="restart" /><span><b>Reset data demo</b><small>Kembalikan nilai stasiun, riwayat 90 hari simulasi, dan alert lokal ke kondisi awal.</small></span><strong>→</strong></button>
           </>}
