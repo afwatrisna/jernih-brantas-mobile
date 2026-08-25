@@ -63,3 +63,4 @@
 - [x] Preserve a clearly labelled simulation dataset and explicit demo mode for tomorrow’s dashboard demonstration.
 - [x] Set Mode Simulasi and Data demo untuk presentasi to default off on first dashboard load.
 - [x] Deliver a secure, read-only AI Asisten Jernih implementation blueprint for the Next.js and Supabase SaaS.
+- [x] Compare low-cost and free-tier Vercel AI SDK-compatible models for AI Asisten Jernih.
