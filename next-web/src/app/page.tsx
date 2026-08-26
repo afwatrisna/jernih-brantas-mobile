@@ -571,8 +571,8 @@ export default function Home() {
             <NavButton active={section === "settings"} icon="settings" label="Atur" onClick={() => setSection("settings")} />
           </div>
 
-          {section === "monitor" && <>
-            <section className="intro"><span className="mode-eyebrow"><Icon name="water" /> MONITOR MODE</span><h1>Kondisi sungai,<br />lebih mudah dipahami.</h1><p>Pantau kejernihan air, peringatan dini, dan pola yang tidak biasa pada titik penting Sungai Brantas.</p></section>
+          {section === "monitor" && <section className="monitor-page">
+            <section className="intro monitor-intro"><span className="mode-eyebrow"><Icon name="water" /> MONITOR · KONDISI SAAT INI</span><h1>Kondisi sungai,<br />lebih mudah dipahami.</h1><p>Mulai dari kondisi stasiun, periksa keandalan sumber data, lalu tindak lanjuti peringatan atau pola yang perlu ditinjau.</p></section>
             <div className="mobile-stations">{stations.map((station) => <button key={station.id} onClick={() => selectStation(station.id)} className={station.id === activeId ? "selected" : ""}><b>{station.name}</b><span>{formatNtu(station.ntu)} NTU</span><i style={{ background: insights[station.id].color }} /></button>)}</div>
             <section className={`hero-card severity-${activeInsight.severity}`}>
               <div><span className="hero-river">SUNGAI BRANTAS · {activeStation.subtitle.toUpperCase()}</span><h2>{activeStation.name}</h2></div>
@@ -584,10 +584,11 @@ export default function Home() {
             </section>
               <DataTrust source={activeSource} simulation={simulation} updatedAt={updatedAt} equipment={demoDisplayMode ? "NTU-Logger demo" : latest?.equipment ?? "NTU-Logger demo"} />
             <div className="metric-grid"><article><Icon name="water" /><strong>{formatNtu(average)}</strong><span>Rata-rata sungai</span></article><article className="positive"><Icon name="check" /><strong>{compliant} / 5</strong><span>Sesuai Kelas II</span></article><article className={activeAlerts > 0 ? "attention" : ""}><Icon name="alert" /><strong>{activeAlerts}</strong><span>Alert aktif</span></article><article><Icon name="database" /><strong>{recordCount}</strong><span>{demoDisplayMode ? "Catatan demo aktif" : hasRemoteReadings ? "Catatan Supabase" : "Catatan demo"}</span></article></div>
+            <section className="monitor-priority" aria-labelledby="monitor-priority-title"><div className="monitor-section-heading"><span>PRIORITAS HARI INI</span><h2 id="monitor-priority-title">Tinjau sebelum mengambil tindakan.</h2><p>Alert dan pola tidak biasa ditampilkan lebih dahulu; keduanya tetap memerlukan verifikasi lapangan.</p></div><AlertPanel stations={stations} insights={insights} onSelect={selectStation} onAnalytics={openAnalytics} /></section>
+            <div className="monitor-action-bar" aria-label="Tindakan monitor"><button type="button" className="monitor-action-primary" onClick={() => setSection("field")}><span><Icon name="field" /> PENGUKURAN LAPANGAN</span><b>Buka Field Mode →</b></button><button type="button" className="monitor-action-secondary" onClick={() => openAnalytics()}><span><Icon name="chart" /> INVESTIGASI DATA</span><b>Lihat Analitik →</b></button></div>
             <AssistantPanel station={activeStation} source={activeSource} simulationEnabled={simulation} demoDisplayMode={demoDisplayMode} access={fieldAccess} accessLoading={fieldAccessLoading} onOpenFieldMode={() => setSection("field")} />
-            <AlertPanel stations={stations} insights={insights} onSelect={selectStation} onAnalytics={openAnalytics} />
-            <div className="monitor-lower"><RiverMap stations={stations} insights={insights} activeId={activeId} filter={mapFilter} onFilter={setMapFilter} onSelect={selectStation} onOpenAnalytics={() => openAnalytics()} /><section className="field-callout"><Icon name="field" /><span>PENGUKURAN LAPANGAN</span><h2>Siap mencatat hasil turbidimeter?</h2><p>Field Mode dapat digunakan untuk memverifikasi titik yang mengalami alert atau perubahan tidak biasa.</p><button onClick={() => setSection("field")}>Buka Field Mode <b>→</b></button></section></div>
-          </>}
+            <div className="monitor-explore"><RiverMap stations={stations} insights={insights} activeId={activeId} filter={mapFilter} onFilter={setMapFilter} onSelect={selectStation} onOpenAnalytics={() => openAnalytics()} /><section className="field-callout"><Icon name="field" /><span>PENGUKURAN LAPANGAN</span><h2>Siap mencatat hasil turbidimeter?</h2><p>Field Mode dapat digunakan untuk memverifikasi titik yang mengalami alert atau perubahan tidak biasa.</p><button onClick={() => setSection("field")}>Buka Field Mode <b>→</b></button></section></div>
+          </section>}
 
           {section === "field" && <>
             <section className="intro field-intro"><span className="mode-eyebrow"><Icon name="field" /> FIELD MODE</span><h1>Catat hasil<br />lapangan.</h1><p>Masukkan hasil turbidimeter secara terarah, lalu tinjau klasifikasi dan status peringatannya sebelum menyimpan catatan lapangan.</p></section>
