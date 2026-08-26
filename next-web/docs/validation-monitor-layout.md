@@ -23,3 +23,7 @@ Pada preview desktop, pemilih stasiun, pilihan rentang waktu, dan ekspor CSV tel
 ## Narrow mobile priority cards
 
 Pada validasi lebar 248 px, kartu Peringatan Dini dan Deteksi Anomali kini tersusun satu kolom. Seluruh heading, isi, dan batas kartu tampil di dalam frame tanpa horizontal overflow.
+
+## Analitik export action
+
+Pada preview desktop, tombol `Export CSV` tetap berada di dalam control bar Analitik bersama pemilih stasiun dan rentang waktu. Toolbar akan menata context di atas kontrol saat lebar desktop terbatas agar tidak ada aksi yang keluar frame.
