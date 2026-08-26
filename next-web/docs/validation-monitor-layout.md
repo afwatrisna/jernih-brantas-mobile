@@ -11,3 +11,11 @@ Screenshot produksi lokal pada lebar 390 px menunjukkan pemilih lima stasiun, he
 ## River map
 
 Pada validasi responsive, ringkasan stasiun terpilih dipindahkan dari atas aliran ke kartu di bawah peta. Peta kini terbuka penuh untuk marker dan jalur sungai, sementara label arah `HULU` dan `HILIR` diperkecil serta diposisikan aman di dalam batas ilustrasi.
+
+## Field Mode
+
+Pada preview desktop, akses petugas kini tampil sebelum form input. Konteks stasiun, langkah kerja, dan Data Trust berada pada kolom pendukung; form utama kemudian mengelompokkan pemilihan alat, nilai NTU, review klasifikasi, dan tindakan simpan.
+
+## Analitik
+
+Pada preview desktop, pemilih stasiun, pilihan rentang waktu, dan ekspor CSV telah digabung menjadi satu control bar yang ringkas. Metrik, chart, perbandingan, dan riwayat tetap berada pada urutan analitik yang sama.
