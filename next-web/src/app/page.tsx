@@ -229,15 +229,15 @@ function RiverMap({
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           <path d="M 13 17 C 20 25, 24 33, 29 38 C 36 44, 41 50, 47 54 C 54 59, 57 65, 62 68 C 69 72, 75 78, 81 82" />
           <path className="river-highlight" d="M 13 17 C 20 25, 24 33, 29 38 C 36 44, 41 50, 47 54 C 54 59, 57 65, 62 68 C 69 72, 75 78, 81 82" />
-          <text x="6" y="12" className="river-direction">HULU</text><text x="82" y="94" className="river-direction">HILIR</text>
+          <text x="6" y="12" className="river-direction">HULU</text><text x="94" y="94" textAnchor="end" className="river-direction">HILIR</text>
         </svg>
         {visibleStations.map((station) => {
           const stationInsight = insights[station.id];
           return <button key={station.id} className={`map-marker ${station.id === activeId ? "selected" : ""} severity-${stationInsight.severity} ${stationInsight.anomaly ? "has-anomaly" : ""}`} onClick={() => onSelect(station.id)} style={{ left: `${station.x}%`, top: `${station.y}%`, "--marker": stationInsight.color } as CSSProperties} aria-label={`${station.name}: ${formatNtu(station.ntu)} NTU, ${stationInsight.label}`} />;
         })}
         {visibleStations.length === 0 && <p className="map-empty">Tidak ada stasiun pada filter ini.</p>}
-        <div className="map-tooltip"><div className="map-tooltip-heading"><strong>{selected.name}</strong><StatusBadge insight={insight} compact /></div><span>{formatNtu(selected.ntu)} NTU · {formatPercent(insight.deviation)} vs baseline</span>{insight.alertState === "active" && <em>⚠ 1 alert aktif</em>}{insight.anomaly && <em>↗ {insight.anomaly}</em>}<button type="button" onClick={onOpenAnalytics}>Lihat analitik →</button></div>
       </div>
+      <div className="map-selection"><div className="map-tooltip-heading"><div><span>STASIUN DIPILIH</span><strong>{selected.name}</strong></div><StatusBadge insight={insight} compact /></div><p>{formatNtu(selected.ntu)} NTU · {formatPercent(insight.deviation)} vs baseline{insight.alertState === "active" ? " · 1 alert aktif" : ""}{insight.anomaly ? ` · ${insight.anomaly}` : ""}</p><button type="button" onClick={onOpenAnalytics}>Lihat analitik →</button></div>
     </section>
   );
 }

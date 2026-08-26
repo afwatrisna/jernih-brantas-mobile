@@ -7,3 +7,7 @@ Pada preview produksi lokal, halaman Monitor berhasil menampilkan urutan baru: k
 ## Mobile
 
 Screenshot produksi lokal pada lebar 390 px menunjukkan pemilih lima stasiun, hero kondisi aktif, serta bottom navigation sticky dengan empat item yang dapat dijangkau. Ruang bawah halaman telah dikompensasi untuk navigation bar. Label sumber sungai pada hero dipotong secara aman agar tidak bertabrakan dengan badge status simulasi.
+
+## River map
+
+Pada validasi responsive, ringkasan stasiun terpilih dipindahkan dari atas aliran ke kartu di bawah peta. Peta kini terbuka penuh untuk marker dan jalur sungai, sementara label arah `HULU` dan `HILIR` diperkecil serta diposisikan aman di dalam batas ilustrasi.

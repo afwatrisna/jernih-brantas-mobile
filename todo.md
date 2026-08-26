@@ -68,3 +68,4 @@
 - [x] Remove the Monitor hero-card “Buka Field Mode untuk merekam” prompt without adding replacement text.
 - [x] Create a design-only desktop and mobile wireframe/layout blueprint for the overall Jernih Brantas website.
 - [x] Redesign and implement the Monitor layout hierarchy with mobile bottom navigation while preserving existing monitoring features.
+- [x] Refine the Monitor river-map information overlay and Hulu/Hilir labels for unobstructed, responsive readability.
