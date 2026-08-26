@@ -66,3 +66,4 @@
 - [x] Compare low-cost and free-tier Vercel AI SDK-compatible models for AI Asisten Jernih.
 - [x] Implement the read-only Gemini free-tier AI Asisten Jernih with Vercel AI SDK and Supabase-authorized context.
 - [x] Remove the Monitor hero-card “Buka Field Mode untuk merekam” prompt without adding replacement text.
+- [x] Create a design-only desktop and mobile wireframe/layout blueprint for the overall Jernih Brantas website.
