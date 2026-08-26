@@ -19,3 +19,7 @@ Pada preview desktop, akses petugas kini tampil sebelum form input. Konteks stas
 ## Analitik
 
 Pada preview desktop, pemilih stasiun, pilihan rentang waktu, dan ekspor CSV telah digabung menjadi satu control bar yang ringkas. Metrik, chart, perbandingan, dan riwayat tetap berada pada urutan analitik yang sama.
+
+## Narrow mobile priority cards
+
+Pada validasi lebar 248 px, kartu Peringatan Dini dan Deteksi Anomali kini tersusun satu kolom. Seluruh heading, isi, dan batas kartu tampil di dalam frame tanpa horizontal overflow.

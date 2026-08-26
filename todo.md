@@ -70,3 +70,4 @@
 - [x] Redesign and implement the Monitor layout hierarchy with mobile bottom navigation while preserving existing monitoring features.
 - [x] Refine the Monitor river-map information overlay and Hulu/Hilir labels for unobstructed, responsive readability.
 - [x] Refine the Field Mode hierarchy and compact the Analitik control bar while preserving current workflows.
+- [x] Fix narrow mobile overflow in Monitor priority cards so alert and anomaly content stays within frame.
