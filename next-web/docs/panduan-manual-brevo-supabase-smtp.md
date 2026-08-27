@@ -41,7 +41,7 @@ Gunakan nilai berikut saat mengisi Supabase. Jangan memasukkan key ini ke `.env.
 |---|---|
 | SMTP host | `smtp-relay.brevo.com` |
 | SMTP port | `587` |
-| SMTP username | `apikey` |
+| SMTP username | Salin **SMTP login email address** yang tampil pada tab Brevo **SMTP & API → SMTP**; jangan gunakan `apikey`. |
 | SMTP password | SMTP key Brevo yang baru dibuat |
 | Sender email | Alamat Brevo yang statusnya `Verified` |
 | Sender name | `Jernih Brantas` |
@@ -52,7 +52,7 @@ Gunakan nilai berikut saat mengisi Supabase. Jangan memasukkan key ini ke `.env.
 2. Masuk ke **Authentication → Emails → SMTP Settings**.
 3. Aktifkan **Enable custom SMTP**.
 4. Isi semua field dengan nilai pada tabel di atas.
-5. Gunakan sender email yang persis sama dengan sender `Verified` di Brevo.
+5. Gunakan sender email yang persis sama dengan sender `Verified` di Brevo. Pada field username, gunakan SMTP login email address dari Brevo, bukan alamat email akun yang mungkin berbeda.
 6. Klik **Save**.
 
 Apabila tombol atau nama menu sedikit berbeda, cari halaman Authentication yang menyebut `SMTP`, `Emails`, atau `Custom SMTP`. Jangan mengubah template Magic Link pada tahap ini.
@@ -75,7 +75,7 @@ Pertahankan jeda kirim ulang Magic Link sekurang-kurangnya **60 detik per email*
 6. Buka link terbaru dan pastikan login berhasil.
 7. Periksa **Authentication → Logs** pada Supabase bila email tidak tiba atau login gagal.
 
-Jika email gagal dikirim, cek berurutan: sender masih `Verified`, SMTP host/port benar, username tepat `apikey`, SMTP key tidak salah/terpotong, dan Brevo account tidak menolak pengiriman. Jika ada error limit, jangan mengulang kirim berkali-kali; periksa nilai pada Rate Limits terlebih dahulu.
+Jika email gagal dikirim, cek berurutan: sender masih `Verified`, SMTP host/port benar, username sama persis dengan SMTP login email address dari tab Brevo SMTP, SMTP key tidak salah/terpotong, dan Brevo account tidak menolak pengiriman. Jika ada error limit, jangan mengulang kirim berkali-kali; periksa nilai pada Rate Limits terlebih dahulu.
 
 ## Batasan dan keamanan
 
