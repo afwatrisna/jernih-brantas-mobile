@@ -72,3 +72,6 @@
 - [x] Refine the Field Mode hierarchy and compact the Analitik control bar while preserving current workflows.
 - [x] Fix narrow mobile overflow in Monitor priority cards so alert and anomaly content stays within frame.
 - [x] Fix desktop Analitik control-bar overflow so Export CSV remains inside the toolbar frame.
+- [x] Inspect the Supabase Auth email rate limit; user selected cooldown recovery without a configuration change or custom SMTP.
+- [x] Decide not to configure a free-tier custom SMTP provider through automated account access; user selected a manual setup path.
+- [x] Provide a manual, security-conscious guide for Brevo sender verification, SMTP key generation, Supabase SMTP configuration, and Auth rate-limit verification.
