@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 
 import { AssistantAccessError, buildAssistantContext, type AssistantDisplayContext } from "@/lib/assistant/context";
 import { buildAssistantSystemPrompt, getAssistantPolicyMessage } from "@/lib/assistant/policy";
+import { JERNIH_KNOWLEDGE_BASE } from "@/lib/assistant/knowledge-base";
 import { consumeAssistantRequest } from "@/lib/assistant/rate-limit";
 import type { ReadingSource } from "@/lib/jernih-data";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
 
     const result = await generateText({
       model: google(MODEL_ID),
-      system: buildAssistantSystemPrompt(JSON.stringify(context)),
+      system: buildAssistantSystemPrompt(JSON.stringify(context), JERNIH_KNOWLEDGE_BASE),
       prompt: input.message,
       maxOutputTokens: 450,
       temperature: 0.2,
@@ -104,6 +105,7 @@ export async function POST(request: Request) {
       answer: result.text.trim(),
       dataStatus: context.dataStatus,
       stationName: context.selectedStation.name,
+      knowledgeBase: { id: JERNIH_KNOWLEDGE_BASE.id, title: JERNIH_KNOWLEDGE_BASE.title, version: JERNIH_KNOWLEDGE_BASE.version },
       remaining: rate.remaining,
       generatedAt: new Date().toISOString(),
     });

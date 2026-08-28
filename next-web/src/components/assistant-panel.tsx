@@ -64,14 +64,14 @@ export function AssistantPanel({ station, source, simulationEnabled, demoDisplay
           display: { ntu: station.ntu, source, simulationEnabled, demoDisplayMode },
         }),
       });
-      const payload = await response.json() as { answer?: string; error?: string; dataStatus?: { label?: string } };
+      const payload = await response.json() as { answer?: string; error?: string; dataStatus?: { label?: string }; knowledgeBase?: { id?: string; title?: string } };
       const answer = payload.answer;
       if (!response.ok || !answer) throw new Error(payload.error ?? "Asisten belum dapat menjawab pertanyaan ini.");
       setMessages((current) => [...current, {
         id: `assistant-${messageIndex}`,
         role: "assistant",
         text: answer,
-        sourceLabel: payload.dataStatus?.label ?? status.label,
+        sourceLabel: `${payload.dataStatus?.label ?? status.label} · ${payload.knowledgeBase?.id ?? "KB-01"}`,
       }]);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Asisten belum dapat dihubungi.");
@@ -95,7 +95,7 @@ export function AssistantPanel({ station, source, simulationEnabled, demoDisplay
         <div className="assistant-context"><b>{station.name}</b><span>{station.ntu.toFixed(1)} NTU · {status.label}</span><small>{status.notice}</small></div>
         {accessLoading ? <p className="assistant-info">Memeriksa akses akun…</p> : !access ? <div className="assistant-login"><p>Masuk diperlukan agar pertanyaan terhubung ke scope Supabase yang diizinkan.</p><button type="button" onClick={onOpenFieldMode}>Buka Field Mode untuk masuk →</button></div> : <>
           <div className="assistant-quick" aria-label="Contoh pertanyaan">{QUICK_QUESTIONS.map((question) => <button type="button" key={question} disabled={submitting} onClick={() => void askAssistant(question)}>{question}</button>)}</div>
-          <div className="assistant-messages" aria-live="polite">{messages.length === 0 ? <p className="assistant-empty">Saya dapat merangkum tren, alert, dan status sumber data untuk stasiun yang dipilih.</p> : messages.map((message) => <article key={message.id} className={message.role}><span>{message.role === "user" ? "Anda" : "Asisten Jernih"}{message.sourceLabel ? ` · ${message.sourceLabel}` : ""}</span><p>{message.text}</p></article>)}</div>
+          <div className="assistant-messages" aria-live="polite">{messages.length === 0 ? <p className="assistant-empty">Saya dapat merangkum tren dan status sumber data, serta menjelaskan dasar kualitas air dari KB-01.</p> : messages.map((message) => <article key={message.id} className={message.role}><span>{message.role === "user" ? "Anda" : "Asisten Jernih"}{message.sourceLabel ? ` · ${message.sourceLabel}` : ""}</span><p>{message.text}</p></article>)}</div>
           <form className="assistant-form" onSubmit={submit}><label><span>Pertanyaan</span><textarea value={input} onChange={(event) => setInput(event.target.value)} maxLength={1000} rows={3} placeholder="Contoh: Ringkas tren NTU stasiun ini." /></label><button type="submit" disabled={submitting || !input.trim()}>{submitting ? "Menganalisis…" : "Tanya Asisten"}</button></form>
         </>}
         {error && <p className="assistant-error" role="alert">{error}</p>}
