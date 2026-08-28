@@ -78,3 +78,4 @@
 - [x] Diagnose and resolve the reported Magic Link sending failure after manual Brevo SMTP setup; corrected the SMTP login guidance and disabled Brevo SMTP unknown-IP blocking, then verified a successful Auth request.
 - [x] Allow Viewer users to access read-only AI Asisten Jernih with a stricter role-based rate limit while preserving Field Mode restrictions.
 - [x] Add supplied PDF KB-01 content as a curated, server-only knowledge source for AI Asisten Jernih with source attribution and safety grounding.
+- [x] Remove repetitive inline KB-01 lead-ins from AI responses and present knowledge sources in a separate clean citation block.

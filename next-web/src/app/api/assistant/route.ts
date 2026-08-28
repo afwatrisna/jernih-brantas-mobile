@@ -106,6 +106,7 @@ export async function POST(request: Request) {
       dataStatus: context.dataStatus,
       stationName: context.selectedStation.name,
       knowledgeBase: { id: JERNIH_KNOWLEDGE_BASE.id, title: JERNIH_KNOWLEDGE_BASE.title, version: JERNIH_KNOWLEDGE_BASE.version },
+      sourceCount: context.dataStatus.label === "BELUM ADA DATA" ? 1 : 2,
       remaining: rate.remaining,
       generatedAt: new Date().toISOString(),
     });

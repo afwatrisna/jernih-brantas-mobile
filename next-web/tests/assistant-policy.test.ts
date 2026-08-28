@@ -21,5 +21,8 @@ describe("AI Asisten Jernih policy", () => {
     expect(prompt).toContain("Gunakan hanya konteks data JSON berikut");
     expect(prompt).toContain("INPUT MANUAL");
     expect(prompt).toContain('{"source":"manual"}');
+    expect(prompt).toContain("Jawab singkat dan natural");
+    expect(prompt).toContain("Metadata sumber akan ditampilkan terpisah oleh UI");
+    expect(prompt).not.toContain("sebutkan bahwa penjelasan berasal");
   });
 });
