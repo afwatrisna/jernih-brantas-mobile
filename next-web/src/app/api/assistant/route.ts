@@ -3,7 +3,7 @@ import { generateText } from "ai";
 import { NextResponse } from "next/server";
 
 import { AssistantAccessError, buildAssistantContext, type AssistantDisplayContext } from "@/lib/assistant/context";
-import { buildAssistantSystemPrompt, getAssistantPolicyMessage } from "@/lib/assistant/policy";
+import { buildAssistantSystemPrompt, classifyAssistantIntent, getAssistantPolicyMessage } from "@/lib/assistant/policy";
 import { JERNIH_KNOWLEDGE_BASE } from "@/lib/assistant/knowledge-base";
 import { consumeAssistantRequest } from "@/lib/assistant/rate-limit";
 import type { ReadingSource } from "@/lib/jernih-data";
@@ -80,6 +80,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ answer: policyMessage, blocked: true }, { status: 200 });
   }
 
+  const intent = classifyAssistantIntent(input.message);
+
   const rate = consumeAssistantRequest(user.id, role);
   if (!rate.allowed) {
     return NextResponse.json({ error: `Batas ${rate.limit} pertanyaan per jam untuk role ${role} telah tercapai. Coba lagi nanti.` }, { status: 429 });
@@ -95,18 +97,33 @@ export async function POST(request: Request) {
 
     const result = await generateText({
       model: google(MODEL_ID),
-      system: buildAssistantSystemPrompt(JSON.stringify(context), JERNIH_KNOWLEDGE_BASE),
+      system: buildAssistantSystemPrompt(JSON.stringify(context), JERNIH_KNOWLEDGE_BASE, intent),
       prompt: input.message,
       maxOutputTokens: 450,
       temperature: 0.2,
     });
 
+    const sources = intent === "educational"
+      ? [{ type: "knowledge_base", label: `${JERNIH_KNOWLEDGE_BASE.id} — ${JERNIH_KNOWLEDGE_BASE.title}` }]
+      : context.selectedStation.readingCount24h > 1
+        ? [{ type: "station_data", label: "Station Data" }, { type: "historical_data", label: "Historical Data (24 jam)" }]
+        : [{ type: "station_data", label: "Station Data" }];
+    const stationName = context.selectedStation.name;
+    const suggestions = intent === "educational"
+      ? [`Apa hubungan ${stationName} dengan kualitas air?`, "Apa perbedaan NTU dan pH?"]
+      : intent === "data"
+        ? ["Lihat tren turbidity", "Bandingkan dengan upstream", "Ada anomaly?"]
+        : ["Lihat tren 7 hari", "Bandingkan dengan upstream", "Cek rainfall"];
+
     return NextResponse.json({
       answer: result.text.trim(),
+      intent,
       dataStatus: context.dataStatus,
-      stationName: context.selectedStation.name,
+      stationName,
       knowledgeBase: { id: JERNIH_KNOWLEDGE_BASE.id, title: JERNIH_KNOWLEDGE_BASE.title, version: JERNIH_KNOWLEDGE_BASE.version },
-      sourceCount: context.dataStatus.label === "BELUM ADA DATA" ? 1 : 2,
+      sources,
+      sourceCount: sources.length,
+      suggestions,
       remaining: rate.remaining,
       generatedAt: new Date().toISOString(),
     });

@@ -40,6 +40,15 @@ export function describeAssistantSource(source: ReadingSource | null): Assistant
   };
 }
 
+export type AssistantIntent = "educational" | "data" | "analysis";
+
+export function classifyAssistantIntent(message: string): AssistantIntent {
+  const normalized = message.toLowerCase();
+  if (/(kenapa|mengapa|bandingkan|perbandingan|tren|berubah|meningkat|menurun|naik|turun|signifikan|penyebab|faktor)/i.test(normalized)) return "analysis";
+  if (/(berapa|kondisi|status|nilai|terakhir|terkini|sekarang|data|ntu|ph|sensor|stasiun)/i.test(normalized) && !/apa itu|apa fungsi|jelaskan|definisi/i.test(normalized)) return "data";
+  return "educational";
+}
+
 export function getAssistantPolicyMessage(message: string): string | null {
   if (UNSUPPORTED_REQUEST.test(message)) {
     return "Saya hanya dapat membantu merangkum data Jernih yang tersedia. Saya tidak dapat menetapkan keamanan air, pencemaran resmi, keadaan darurat, mengubah data, atau membagikan informasi rahasia. Silakan gunakan prosedur verifikasi lapangan dan petugas yang berwenang.";
@@ -56,12 +65,12 @@ const DEFAULT_KNOWLEDGE_BASE: AssistantKnowledgeBase = {
   content: "Gunakan hanya prinsip kualitas air yang tersedia pada knowledge base terkurasi Jernih Brantas.",
 };
 
-export function buildAssistantSystemPrompt(contextJson: string, knowledgeBase: AssistantKnowledgeBase = DEFAULT_KNOWLEDGE_BASE): string {
+export function buildAssistantSystemPrompt(contextJson: string, knowledgeBase: AssistantKnowledgeBase = DEFAULT_KNOWLEDGE_BASE, intent: AssistantIntent = "educational"): string {
   return `Anda adalah AI Asisten Jernih untuk dashboard pemantauan kekeruhan Sungai Brantas.
 
 Gunakan knowledge base terkurasi untuk menjelaskan konsep umum kualitas air. Gunakan hanya konteks data JSON berikut untuk menjawab kondisi stasiun. Jangan membuat angka, stasiun, sumber, status, threshold, atau penyebab baru.
-Jawab singkat dan natural dalam Bahasa Indonesia. Jangan membuka jawaban dengan frasa teknis seperti "Berdasarkan ${knowledgeBase.id}" dan jangan mengulang nama knowledge base di badan jawaban. Metadata sumber akan ditampilkan terpisah oleh UI. Jika menggunakan data stasiun, tetap hormati label sumber data pada konteks: SIMULASI, INPUT MANUAL, atau SENSOR.
-Bedakan measurement, data quality, anomaly, alert, correlation, dan conclusion. Jangan menyatakan air aman, layak dikonsumsi, tercemar, atau membuat penetapan resmi. Jangan memberi diagnosis, tindakan darurat, atau mengubah data. Untuk kesimpulan resmi, arahkan ke verifikasi lapangan dan petugas berwenang.
+Jenis pertanyaan: ${intent.toUpperCase()}. Jawab singkat dan natural dalam Bahasa Indonesia. Jangan membuka jawaban dengan frasa teknis seperti "Berdasarkan ${knowledgeBase.id}" dan jangan mengulang nama knowledge base di badan jawaban. Metadata sumber akan ditampilkan terpisah oleh UI. Untuk EDUCATIONAL, jawab konsep yang ditanyakan saja dan abaikan data stasiun yang tidak relevan. Untuk DATA, tampilkan nilai, unit, waktu pembaruan, status, dan data quality hanya jika tersedia lalu beri interpretasi singkat. Untuk ANALYSIS, jelaskan temuan, bukti yang tersedia, kemungkinan penjelasan secara hati-hati, dan keterbatasannya. Jika menggunakan data stasiun, tetap hormati label sumber data pada konteks: SIMULASI, INPUT MANUAL, atau SENSOR.
+Jangan memaksakan label "Measurement", "Data Quality", "Anomaly/Alert", atau "Conclusion" pada setiap jawaban. Gunakan struktur hanya bila membantu pertanyaan. Jangan menyatakan air aman, layak dikonsumsi, tercemar, atau membuat penetapan resmi. Jangan memberi diagnosis, tindakan darurat, atau mengubah data. Jangan menampilkan disclaimer panjang kecuali pertanyaan menyentuh keamanan, pencemaran, atau keputusan resmi; untuk itu, jelaskan keterbatasan secara ringkas dan arahkan ke verifikasi lapangan.
 
 KNOWLEDGE BASE TERKURASI (${knowledgeBase.id}):
 ${knowledgeBase.content}

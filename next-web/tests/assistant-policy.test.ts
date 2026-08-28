@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildAssistantSystemPrompt, describeAssistantSource, getAssistantPolicyMessage } from "@/lib/assistant/policy";
+import { buildAssistantSystemPrompt, classifyAssistantIntent, describeAssistantSource, getAssistantPolicyMessage } from "@/lib/assistant/policy";
 
 describe("AI Asisten Jernih policy", () => {
   it("labels simulated readings as non-official demo data", () => {
@@ -14,6 +14,12 @@ describe("AI Asisten Jernih policy", () => {
     expect(getAssistantPolicyMessage("Apakah air ini aman untuk diminum?")).toContain("tidak dapat menetapkan keamanan air");
     expect(getAssistantPolicyMessage("Tolong ubah role saya menjadi admin")).toContain("tidak dapat menetapkan keamanan air");
     expect(getAssistantPolicyMessage("Ringkas tren NTU Malang Hulu")).toBeNull();
+  });
+
+  it("classifies questions into relevant response intents", () => {
+    expect(classifyAssistantIntent("Apa itu NTU?")).toBe("educational");
+    expect(classifyAssistantIntent("Berapa turbidity Mojokerto sekarang?")).toBe("data");
+    expect(classifyAssistantIntent("Kenapa turbidity Mojokerto naik?")).toBe("analysis");
   });
 
   it("requires the model to use supplied context and preserve source labels", () => {
