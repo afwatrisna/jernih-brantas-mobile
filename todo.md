@@ -76,3 +76,4 @@
 - [x] Decide not to configure a free-tier custom SMTP provider through automated account access; user selected a manual setup path.
 - [x] Provide a manual, security-conscious guide for Brevo sender verification, SMTP key generation, Supabase SMTP configuration, and Auth rate-limit verification.
 - [x] Diagnose and resolve the reported Magic Link sending failure after manual Brevo SMTP setup; corrected the SMTP login guidance and disabled Brevo SMTP unknown-IP blocking, then verified a successful Auth request.
+- [x] Allow Viewer users to access read-only AI Asisten Jernih with a stricter role-based rate limit while preserving Field Mode restrictions.

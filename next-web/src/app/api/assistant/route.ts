@@ -12,6 +12,8 @@ export const runtime = "nodejs";
 
 const MODEL_ID = "gemini-3.1-flash-lite";
 const VALID_SOURCES: ReadingSource[] = ["simulation", "manual", "sensor"];
+const VALID_ROLES = ["viewer", "field_operator", "admin"] as const;
+type AssistantRole = (typeof VALID_ROLES)[number];
 
 function isDisplayContext(value: unknown): value is AssistantDisplayContext {
   if (!value || typeof value !== "object") return false;
@@ -51,14 +53,14 @@ export async function POST(request: Request) {
   const authorization = request.headers.get("authorization");
   const token = authorization?.replace(/^Bearer\s+/i, "");
   if (!token) {
-    return NextResponse.json({ error: "Masuk sebagai petugas untuk menggunakan Asisten Jernih." }, { status: 401 });
+    return NextResponse.json({ error: "Masuk untuk menggunakan Asisten Jernih." }, { status: 401 });
   }
 
   const supabase = createServerSupabaseClient();
   const { data: userData, error: userError } = await supabase.auth.getUser(token);
   const user = userData.user;
   if (userError || !user) {
-    return NextResponse.json({ error: "Sesi petugas tidak dapat diverifikasi. Silakan masuk kembali." }, { status: 401 });
+    return NextResponse.json({ error: "Sesi tidak dapat diverifikasi. Silakan masuk kembali." }, { status: 401 });
   }
 
   const { data: profile, error: profileError } = await supabase
@@ -67,24 +69,25 @@ export async function POST(request: Request) {
     .eq("id", user.id)
     .maybeSingle();
 
-  if (profileError || !profile) {
-    return NextResponse.json({ error: "Akun belum memiliki profil akses Jernih." }, { status: 403 });
+  if (profileError || !profile || !VALID_ROLES.includes(profile.role as AssistantRole)) {
+    return NextResponse.json({ error: "Akun belum memiliki role akses Jernih yang valid." }, { status: 403 });
   }
 
+  const role = profile.role as AssistantRole;
   const policyMessage = getAssistantPolicyMessage(input.message);
   if (policyMessage) {
     return NextResponse.json({ answer: policyMessage, blocked: true }, { status: 200 });
   }
 
-  const rate = consumeAssistantRequest(user.id);
+  const rate = consumeAssistantRequest(user.id, role);
   if (!rate.allowed) {
-    return NextResponse.json({ error: "Batas 10 pertanyaan per jam untuk pilot Asisten Jernih telah tercapai. Coba lagi nanti." }, { status: 429 });
+    return NextResponse.json({ error: `Batas ${rate.limit} pertanyaan per jam untuk role ${role} telah tercapai. Coba lagi nanti.` }, { status: 429 });
   }
 
   try {
     const context = await buildAssistantContext({
       userId: user.id,
-      role: profile.role,
+      role,
       stationId: input.stationId,
       display: input.display,
     });

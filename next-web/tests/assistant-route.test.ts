@@ -23,6 +23,6 @@ describe("AI Asisten Jernih route", () => {
     }));
 
     expect(response.status).toBe(401);
-    await expect(response.json()).resolves.toMatchObject({ error: expect.stringContaining("Masuk sebagai petugas") });
+    await expect(response.json()).resolves.toMatchObject({ error: expect.stringContaining("Masuk untuk menggunakan Asisten Jernih") });
   });
 });

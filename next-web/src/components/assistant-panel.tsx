@@ -41,7 +41,7 @@ export function AssistantPanel({ station, source, simulationEnabled, demoDisplay
     const supabase = getSupabaseClient();
     const { data: sessionData } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
     if (!sessionData.session) {
-      setError("Masuk sebagai petugas melalui Field Mode sebelum menggunakan Asisten Jernih.");
+      setError("Masuk melalui Magic Link untuk menggunakan Asisten Jernih.");
       return;
     }
 
@@ -93,13 +93,13 @@ export function AssistantPanel({ station, source, simulationEnabled, demoDisplay
       </div>
       {open && <div className="assistant-body">
         <div className="assistant-context"><b>{station.name}</b><span>{station.ntu.toFixed(1)} NTU · {status.label}</span><small>{status.notice}</small></div>
-        {accessLoading ? <p className="assistant-info">Memeriksa akses petugas…</p> : !access ? <div className="assistant-login"><p>Masuk sebagai petugas diperlukan agar pertanyaan terhubung ke scope Supabase yang diizinkan.</p><button type="button" onClick={onOpenFieldMode}>Buka Field Mode untuk masuk →</button></div> : <>
+        {accessLoading ? <p className="assistant-info">Memeriksa akses akun…</p> : !access ? <div className="assistant-login"><p>Masuk diperlukan agar pertanyaan terhubung ke scope Supabase yang diizinkan.</p><button type="button" onClick={onOpenFieldMode}>Buka Field Mode untuk masuk →</button></div> : <>
           <div className="assistant-quick" aria-label="Contoh pertanyaan">{QUICK_QUESTIONS.map((question) => <button type="button" key={question} disabled={submitting} onClick={() => void askAssistant(question)}>{question}</button>)}</div>
           <div className="assistant-messages" aria-live="polite">{messages.length === 0 ? <p className="assistant-empty">Saya dapat merangkum tren, alert, dan status sumber data untuk stasiun yang dipilih.</p> : messages.map((message) => <article key={message.id} className={message.role}><span>{message.role === "user" ? "Anda" : "Asisten Jernih"}{message.sourceLabel ? ` · ${message.sourceLabel}` : ""}</span><p>{message.text}</p></article>)}</div>
           <form className="assistant-form" onSubmit={submit}><label><span>Pertanyaan</span><textarea value={input} onChange={(event) => setInput(event.target.value)} maxLength={1000} rows={3} placeholder="Contoh: Ringkas tren NTU stasiun ini." /></label><button type="submit" disabled={submitting || !input.trim()}>{submitting ? "Menganalisis…" : "Tanya Asisten"}</button></form>
         </>}
         {error && <p className="assistant-error" role="alert">{error}</p>}
-        <p className="assistant-footnote">Asisten tidak menentukan air aman, tercemar, atau layak dikonsumsi. Gunakan prosedur verifikasi lapangan untuk penetapan resmi.</p>
+        <p className="assistant-footnote">Akses Viewer dibatasi 5 pertanyaan per jam; Field Operator dan Admin 10. Asisten tetap read-only dan tidak menentukan air aman, tercemar, atau layak dikonsumsi.</p>
       </div>}
     </section>
   );
