@@ -60,3 +60,21 @@ export const formatNtu = (ntu: number) => ntu.toFixed(1);
 
 export const formatTime = (timestamp: number) =>
   new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(timestamp);
+
+/**
+ * Satu kalimat pendek yang menjelaskan arti NTU untuk pengunjung yang belum
+ * familiar dengan istilah kekeruhan air. Dipakai sebagai anotasi inline di
+ * bawah angka NTU, bukan disembunyikan di tooltip, supaya selalu terlihat.
+ */
+export const NTU_PLAIN_EXPLANATION = "NTU mengukur seberapa keruh air — makin tinggi angkanya, makin banyak partikel yang membuat air terlihat tidak jernih.";
+
+/**
+ * Deskripsi kelas air PP No. 22/2021 dalam bahasa sehari-hari, dipasangkan
+ * dengan label teknis (grade I-IV) yang sudah ada di classifyNtu().
+ */
+export const WATER_CLASS_PLAIN_LABEL: Record<WaterClass["grade"], string> = {
+  I: "standar tertinggi — cocok untuk air baku minum",
+  II: "standar baik — cocok untuk rekreasi air dan perikanan",
+  III: "standar sedang — umumnya untuk irigasi dan perikanan tertentu",
+  IV: "standar paling longgar — untuk irigasi dan keperluan lain di luar konsumsi",
+};
