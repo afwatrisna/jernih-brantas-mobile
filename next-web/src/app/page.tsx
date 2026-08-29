@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
 import {
   EQUIPMENT,
+  NTU_PLAIN_EXPLANATION,
+  WATER_CLASS_PLAIN_LABEL,
   classifyNtu,
   formatNtu,
   formatTime,
@@ -294,12 +296,12 @@ function AlertPanel({
     <div className="insight-grid">
       <section className={`alert-card ${priority ? `severity-${insights[priority.id].severity}` : "normal"}`}>
         <div className="alert-heading"><span><Icon name="alert" /> PERINGATAN DINI</span>{priority ? <StatusBadge insight={insights[priority.id]} compact /> : <span className="quiet-label">Tidak ada alert aktif</span>}</div>
-        {priority ? <><h2>{insights[priority.id].alertState === "active" ? `${insights[priority.id].label.toUpperCase()} TURBIDITY` : "UNUSUAL CHANGE"}</h2><strong>{priority.name}</strong><div className="alert-number">{formatNtu(priority.ntu)} <small>NTU</small></div><p>Baseline {formatNtu(priority.baseline)} NTU · {formatPercent(insights[priority.id].deviation)} · {insights[priority.id].anomaly ?? "Nilai perlu ditinjau"}</p><div className="alert-actions"><button type="button" onClick={() => onSelect(priority.id)}>Lihat stasiun</button><button type="button" onClick={() => onAnalytics(priority.id)}>Riwayat →</button></div></> : <><h2>Semua terkendali</h2><p>Sistem akan menandai kenaikan cepat, penyimpangan baseline, dan status High/Critical ketika data simulasi atau input manual berubah.</p></>}
+        {priority ? <><h2>{insights[priority.id].alertState === "active" ? `${insights[priority.id].label.toUpperCase()} · KEKERUHAN` : "PERUBAHAN TIDAK BIASA"}</h2><strong>{priority.name}</strong><div className="alert-number">{formatNtu(priority.ntu)} <small>NTU</small></div><p>Baseline {formatNtu(priority.baseline)} NTU · {formatPercent(insights[priority.id].deviation)} · {insights[priority.id].anomaly ?? "Nilai perlu ditinjau"}</p><p className="alert-plain-explainer">Artinya: air di titik ini lebih keruh dari kondisi biasanya (baseline). Ini belum tentu berarti tercemar — bisa karena hujan atau sedimen — dan tetap perlu dicek petugas untuk kepastian.</p><div className="alert-actions"><button type="button" onClick={() => onSelect(priority.id)}>Lihat stasiun</button><button type="button" onClick={() => onAnalytics(priority.id)}>Riwayat →</button></div></> : <><h2>Semua terkendali</h2><p>Sistem akan menandai kenaikan cepat, penyimpangan baseline, dan status High/Critical ketika data simulasi atau input manual berubah.</p></>}
         {resolvedAlerts.length > 0 && <small className="resolved-note">{resolvedAlerts.length} alert sebelumnya berstatus Resolved setelah pembacaan kembali normal.</small>}
       </section>
       <section className="anomaly-card surface-card">
         <div className="card-heading"><div><h2>Deteksi anomali</h2><p>Pola tidak biasa, bukan penetapan pencemaran.</p></div><Icon name="trend" /></div>
-        {anomalyStations.length > 0 ? <div className="anomaly-summary"><span>UNUSUAL CHANGE</span><strong>{anomalyStations[0].name}</strong><p>{anomalyStations[0] && insights[anomalyStations[0].id].anomaly} · deviasi {formatPercent(insights[anomalyStations[0].id].deviation)} dari baseline.</p><button type="button" onClick={() => onAnalytics(anomalyStations[0].id)}>Buka data historis →</button></div> : <div className="anomaly-summary quiet"><span>POLA NORMAL</span><strong>Belum ada anomali</strong><p>Ambang akan ditinjau kembali setiap pembacaan baru.</p></div>}
+        {anomalyStations.length > 0 ? <div className="anomaly-summary"><span>POLA TIDAK BIASA</span><strong>{anomalyStations[0].name}</strong><p>{anomalyStations[0] && insights[anomalyStations[0].id].anomaly} · deviasi {formatPercent(insights[anomalyStations[0].id].deviation)} dari baseline.</p><button type="button" onClick={() => onAnalytics(anomalyStations[0].id)}>Buka data historis →</button></div> : <div className="anomaly-summary quiet"><span>POLA NORMAL</span><strong>Belum ada anomali</strong><p>Ambang akan ditinjau kembali setiap pembacaan baru.</p></div>}
       </section>
     </div>
   );
@@ -445,7 +447,7 @@ export default function Home() {
     setFieldAuthMessage("");
     try {
       await requestMagicLink(fieldAuthEmail);
-      setFieldAuthMessage("Tautan masuk telah dikirim. Buka email tersebut, lalu kembali ke Field Mode.");
+      setFieldAuthMessage("Tautan masuk telah dikirim. Buka email tersebut, lalu kembali ke halaman Catat Hasil Ukur.");
     } catch (error) {
       setFieldAuthMessage(error instanceof Error ? error.message : "Tautan masuk tidak dapat dikirim.");
     } finally {
@@ -460,7 +462,7 @@ export default function Home() {
       return;
     }
     if (!canWriteFieldMode) {
-      setFieldError(`Akun ini belum memiliki izin Field Mode untuk ${selectedFieldStation.name}.`);
+      setFieldError(`Akun ini belum memiliki izin Catat Hasil Ukur untuk ${selectedFieldStation.name}.`);
       return;
     }
     if (!Number.isFinite(fieldValue) || fieldValue < 0 || fieldValue > 500) {
@@ -539,7 +541,7 @@ export default function Home() {
         <button className="brand" onClick={() => setSection("monitor")} aria-label="Beranda Jernih"><span className="brand-mark">◒</span><span><b>Jernih</b><small>BRANTAS · NEXT</small></span></button>
         <nav className="topnav" aria-label="Navigasi utama">
           <NavButton active={section === "monitor"} icon="grid" label="Monitor" onClick={() => setSection("monitor")} />
-          <NavButton active={section === "field"} icon="field" label="Field Mode" onClick={() => setSection("field")} />
+          <NavButton active={section === "field"} icon="field" label="Catat Hasil Ukur" onClick={() => setSection("field")} />
           <NavButton active={section === "analytics"} icon="chart" label="Analitik" onClick={() => setSection("analytics")} />
           <NavButton active={section === "settings"} icon="settings" label="Atur" onClick={() => setSection("settings")} />
         </nav>
@@ -551,7 +553,7 @@ export default function Home() {
           <span className="sidebar-label">RUANG KERJA</span>
           <div className="sidebar-nav">
             <NavButton active={section === "monitor"} icon="grid" label="Monitor" onClick={() => setSection("monitor")} />
-            <NavButton active={section === "field"} icon="field" label="Field Mode" onClick={() => setSection("field")} />
+            <NavButton active={section === "field"} icon="field" label="Catat Hasil Ukur" onClick={() => setSection("field")} />
             <NavButton active={section === "analytics"} icon="chart" label="Analitik" onClick={() => setSection("analytics")} />
             <NavButton active={section === "settings"} icon="settings" label="Pengaturan" onClick={() => setSection("settings")} />
           </div>
@@ -560,13 +562,13 @@ export default function Home() {
           <div className="station-list">
             {stations.map((station) => <button key={station.id} onClick={() => { selectStation(station.id); setSection("monitor"); }} className={`station-item ${station.id === activeId ? "selected" : ""}`}><i style={{ background: insights[station.id].color }} /><span><b>{station.name}</b><small>{station.subtitle}</small></span><strong>{formatNtu(station.ntu)}</strong></button>)}
           </div>
-          <p className="local-note">◌ Data demo tetap simulasi. Catatan Field Mode diberi sumber manual dan tetap perlu verifikasi lapangan.</p>
+          <p className="local-note">◌ Data demo tetap simulasi. Catatan dari Catat Hasil Ukur diberi sumber manual dan tetap perlu verifikasi lapangan.</p>
         </aside>
 
         <section className="content">
           <div className="mobile-nav">
             <NavButton active={section === "monitor"} icon="grid" label="Monitor" onClick={() => setSection("monitor")} />
-            <NavButton active={section === "field"} icon="field" label="Field" onClick={() => setSection("field")} />
+            <NavButton active={section === "field"} icon="field" label="Catat" onClick={() => setSection("field")} />
             <NavButton active={section === "analytics"} icon="chart" label="Analitik" onClick={() => setSection("analytics")} />
             <NavButton active={section === "settings"} icon="settings" label="Atur" onClick={() => setSection("settings")} />
           </div>
@@ -582,18 +584,19 @@ export default function Home() {
               <div className="hero-status"><StatusBadge insight={activeInsight} compact />{activeInsight.anomaly && <span>↗ {activeInsight.anomaly}</span>}</div>
               <div className="gauge"><div className="gauge-track"><i style={{ height: `${Math.min(100, Math.max(4, activeStation.ntu))}%` }} /></div><span>100</span><span>50</span><span>0</span></div>
             </section>
+            <p className="hero-plain-explainer">{NTU_PLAIN_EXPLANATION} Kelas {activeClass.grade}: {WATER_CLASS_PLAIN_LABEL[activeClass.grade]}.</p>
               <DataTrust source={activeSource} simulation={simulation} updatedAt={updatedAt} equipment={demoDisplayMode ? "NTU-Logger demo" : latest?.equipment ?? "NTU-Logger demo"} />
             <div className="metric-grid"><article><Icon name="water" /><strong>{formatNtu(average)}</strong><span>Rata-rata sungai</span></article><article className="positive"><Icon name="check" /><strong>{compliant} / 5</strong><span>Sesuai Kelas II</span></article><article className={activeAlerts > 0 ? "attention" : ""}><Icon name="alert" /><strong>{activeAlerts}</strong><span>Alert aktif</span></article><article><Icon name="database" /><strong>{recordCount}</strong><span>{demoDisplayMode ? "Catatan demo aktif" : hasRemoteReadings ? "Catatan Supabase" : "Catatan demo"}</span></article></div>
             <section className="monitor-priority" aria-labelledby="monitor-priority-title"><div className="monitor-section-heading"><span>PRIORITAS HARI INI</span><h2 id="monitor-priority-title">Tinjau sebelum mengambil tindakan.</h2><p>Alert dan pola tidak biasa ditampilkan lebih dahulu; keduanya tetap memerlukan verifikasi lapangan.</p></div><AlertPanel stations={stations} insights={insights} onSelect={selectStation} onAnalytics={openAnalytics} /></section>
-            <div className="monitor-action-bar" aria-label="Tindakan monitor"><button type="button" className="monitor-action-primary" onClick={() => setSection("field")}><span><Icon name="field" /> PENGUKURAN LAPANGAN</span><b>Buka Field Mode →</b></button><button type="button" className="monitor-action-secondary" onClick={() => openAnalytics()}><span><Icon name="chart" /> INVESTIGASI DATA</span><b>Lihat Analitik →</b></button></div>
+            <div className="monitor-action-bar" aria-label="Tindakan monitor"><button type="button" className="monitor-action-primary" onClick={() => setSection("field")}><span><Icon name="field" /> PENGUKURAN LAPANGAN</span><b>Catat Hasil Ukur →</b></button><button type="button" className="monitor-action-secondary" onClick={() => openAnalytics()}><span><Icon name="chart" /> INVESTIGASI DATA</span><b>Lihat Analitik →</b></button></div>
             <AssistantPanel station={activeStation} source={activeSource} simulationEnabled={simulation} demoDisplayMode={demoDisplayMode} access={fieldAccess} accessLoading={fieldAccessLoading} onOpenFieldMode={() => setSection("field")} />
-            <div className="monitor-explore"><RiverMap stations={stations} insights={insights} activeId={activeId} filter={mapFilter} onFilter={setMapFilter} onSelect={selectStation} onOpenAnalytics={() => openAnalytics()} /><section className="field-callout"><Icon name="field" /><span>PENGUKURAN LAPANGAN</span><h2>Siap mencatat hasil turbidimeter?</h2><p>Field Mode dapat digunakan untuk memverifikasi titik yang mengalami alert atau perubahan tidak biasa.</p><button onClick={() => setSection("field")}>Buka Field Mode <b>→</b></button></section></div>
+            <div className="monitor-explore"><RiverMap stations={stations} insights={insights} activeId={activeId} filter={mapFilter} onFilter={setMapFilter} onSelect={selectStation} onOpenAnalytics={() => openAnalytics()} /><section className="field-callout"><Icon name="field" /><span>PENGUKURAN LAPANGAN</span><h2>Siap mencatat hasil turbidimeter?</h2><p>Catat Hasil Ukur dapat digunakan untuk memverifikasi titik yang mengalami alert atau perubahan tidak biasa.</p><button onClick={() => setSection("field")}>Catat Hasil Ukur <b>→</b></button></section></div>
           </section>}
 
           {section === "field" && <>
             <section className="intro field-intro"><span className="mode-eyebrow"><Icon name="field" /> FIELD MODE · INPUT TERARAH</span><h1>Catat hasil<br />lapangan.</h1><p>Verifikasi akses petugas, pilih titik, lalu masukkan nilai NTU untuk ditinjau sebelum disimpan sebagai catatan lapangan.</p></section>
             <section className="field-access field-access-primary" aria-live="polite">
-              <div><span>AKSES PETUGAS</span>{fieldAccessLoading ? <strong>Memeriksa sesi Supabase…</strong> : fieldAccess ? <><strong>{fieldAccess.displayName || fieldAccess.email}</strong><small>{fieldAccess.role === "admin" ? "Administrator · semua stasiun" : fieldAccess.role === "field_operator" ? `Petugas lapangan · ${fieldAccess.stationIds.length} stasiun ditugaskan` : "Akun masuk · menunggu penugasan Field Mode"}</small></> : <><strong>Masuk diperlukan</strong><small>Hanya petugas yang ditugaskan dapat menyimpan input manual.</small></>}</div>
+              <div><span>AKSES PETUGAS</span>{fieldAccessLoading ? <strong>Memeriksa sesi Supabase…</strong> : fieldAccess ? <><strong>{fieldAccess.displayName || fieldAccess.email}</strong><small>{fieldAccess.role === "admin" ? "Administrator · semua stasiun" : fieldAccess.role === "field_operator" ? `Petugas lapangan · ${fieldAccess.stationIds.length} stasiun ditugaskan` : "Akun masuk · menunggu penugasan Catat Hasil Ukur"}</small></> : <><strong>Masuk diperlukan</strong><small>Hanya petugas yang ditugaskan dapat menyimpan input manual.</small></>}</div>
               {fieldAccess ? <button className="field-auth-action" type="button" onClick={() => void signOutFieldMode()}>Keluar</button> : <div className="field-auth-controls"><input value={fieldAuthEmail} onChange={(event) => setFieldAuthEmail(event.target.value)} type="email" inputMode="email" placeholder="email.petugas@instansi.id" aria-label="Email petugas" /><button className="field-auth-action" type="button" disabled={fieldAuthSubmitting} onClick={() => void requestFieldModeAccess()}>{fieldAuthSubmitting ? "Mengirim…" : "Kirim tautan masuk"}</button></div>}
               {(fieldAuthMessage || fieldAccessIssue) && <p>{fieldAuthMessage || fieldAccessIssue}</p>}
             </section>
