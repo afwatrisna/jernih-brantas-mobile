@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { AssistantAccessError, buildAssistantContext, type AssistantDisplayContext } from "@/lib/assistant/context";
 import { buildAssistantSystemPrompt, classifyAssistantIntent, getAssistantPolicyMessage } from "@/lib/assistant/policy";
 import { JERNIH_KNOWLEDGE_BASE } from "@/lib/assistant/knowledge-base";
-import { consumeAssistantRequest } from "@/lib/assistant/rate-limit";
+import { consumeAnonymousEducationalRequest, consumeAssistantRequest } from "@/lib/assistant/rate-limit";
 import type { ReadingSource } from "@/lib/jernih-data";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 
@@ -51,8 +51,57 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Pertanyaan, stasiun, atau context data tidak valid." }, { status: 400 });
   }
 
+  const policyMessage = getAssistantPolicyMessage(input.message);
+  if (policyMessage) {
+    return NextResponse.json({ answer: policyMessage, blocked: true }, { status: 200 });
+  }
+
+  const intent = classifyAssistantIntent(input.message);
   const authorization = request.headers.get("authorization");
   const token = authorization?.replace(/^Bearer\s+/i, "");
+
+  // Educational questions ("apa itu NTU?", "apa beda NTU dan pH?") never touch
+  // Supabase station data or Gemini with station context — they only use the
+  // curated knowledge base. Anonymous visitors can ask these without signing
+  // in, under a strict per-IP limit, so first-time visitors are not blocked
+  // from basic explanations behind a login wall.
+  if (!token && intent === "educational") {
+    const identifier = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      || request.headers.get("x-real-ip")
+      || "unknown";
+    const rate = consumeAnonymousEducationalRequest(identifier);
+    if (!rate.allowed) {
+      return NextResponse.json(
+        { error: `Batas ${rate.limit} pertanyaan edukatif per jam untuk pengunjung belum masuk telah tercapai. Masuk untuk kuota lebih besar dan pertanyaan tentang data stasiun.` },
+        { status: 429 },
+      );
+    }
+
+    try {
+      const result = await generateText({
+        model: google(MODEL_ID),
+        system: buildAssistantSystemPrompt("{}", JERNIH_KNOWLEDGE_BASE, "educational"),
+        prompt: input.message,
+        maxOutputTokens: 450,
+        temperature: 0.2,
+      });
+
+      return NextResponse.json({
+        answer: result.text.trim(),
+        intent: "educational",
+        knowledgeBase: { id: JERNIH_KNOWLEDGE_BASE.id, title: JERNIH_KNOWLEDGE_BASE.title, version: JERNIH_KNOWLEDGE_BASE.version },
+        sources: [{ type: "knowledge_base", label: `${JERNIH_KNOWLEDGE_BASE.id} — ${JERNIH_KNOWLEDGE_BASE.title}` }],
+        sourceCount: 1,
+        suggestions: ["Apa itu NTU?", "Apa perbedaan NTU dan pH?"],
+        remaining: rate.remaining,
+        anonymous: true,
+        generatedAt: new Date().toISOString(),
+      });
+    } catch {
+      return NextResponse.json({ error: "Asisten Jernih sedang tidak tersedia. Data dashboard tetap dapat digunakan seperti biasa." }, { status: 503 });
+    }
+  }
+
   if (!token) {
     return NextResponse.json({ error: "Masuk untuk menggunakan Asisten Jernih." }, { status: 401 });
   }
@@ -75,12 +124,6 @@ export async function POST(request: Request) {
   }
 
   const role = profile.role as AssistantRole;
-  const policyMessage = getAssistantPolicyMessage(input.message);
-  if (policyMessage) {
-    return NextResponse.json({ answer: policyMessage, blocked: true }, { status: 200 });
-  }
-
-  const intent = classifyAssistantIntent(input.message);
 
   const rate = consumeAssistantRequest(user.id, role);
   if (!rate.allowed) {
