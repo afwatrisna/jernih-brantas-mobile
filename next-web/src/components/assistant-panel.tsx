@@ -44,10 +44,6 @@ export function AssistantPanel({ station, source, simulationEnabled, demoDisplay
 
     const supabase = getSupabaseClient();
     const { data: sessionData } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
-    if (!sessionData.session) {
-      setError("Masuk melalui Magic Link untuk menggunakan Asisten Jernih.");
-      return;
-    }
 
     const messageIndex = messages.length;
     const userMessage: ChatMessage = { id: `user-${messageIndex}`, role: "user", text: message };
@@ -56,26 +52,33 @@ export function AssistantPanel({ station, source, simulationEnabled, demoDisplay
     setSubmitting(true);
 
     try {
+      const headers: Record<string, string> = { "content-type": "application/json" };
+      if (sessionData.session) headers.authorization = `Bearer ${sessionData.session.access_token}`;
+
       const response = await fetch("/api/assistant", {
         method: "POST",
-        headers: {
-          "content-type": "application/json",
-          authorization: `Bearer ${sessionData.session.access_token}`,
-        },
+        headers,
         body: JSON.stringify({
           message,
           stationId: station.id,
           display: { ntu: station.ntu, source, simulationEnabled, demoDisplayMode },
         }),
       });
-      const payload = await response.json() as { answer?: string; error?: string; dataStatus?: { label?: string }; knowledgeBase?: { id?: string; title?: string }; sourceCount?: number; sources?: { type: string; label: string }[]; suggestions?: string[] };
+      const payload = await response.json() as { answer?: string; error?: string; dataStatus?: { label?: string }; knowledgeBase?: { id?: string; title?: string }; sourceCount?: number; sources?: { type: string; label: string }[]; suggestions?: string[]; anonymous?: boolean };
       const answer = payload.answer;
-      if (!response.ok || !answer) throw new Error(payload.error ?? "Asisten belum dapat menjawab pertanyaan ini.");
+      if (!response.ok || !answer) {
+        // Tanpa sesi, pertanyaan yang butuh data stasiun (bukan sekadar edukatif)
+        // akan ditolak 401 oleh server. Beri arahan yang jelas, bukan pesan generik.
+        if (!sessionData.session && response.status === 401) {
+          throw new Error("Pertanyaan ini memerlukan data stasiun. Masuk melalui Catat Hasil Ukur, atau coba pertanyaan umum seperti \"Apa itu NTU?\".");
+        }
+        throw new Error(payload.error ?? "Asisten belum dapat menjawab pertanyaan ini.");
+      }
       setMessages((current) => [...current, {
         id: `assistant-${messageIndex}`,
         role: "assistant",
         text: answer,
-        sourceLabel: payload.dataStatus?.label ?? status.label,
+        sourceLabel: payload.anonymous ? "PENGUNJUNG · BELUM MASUK" : payload.dataStatus?.label ?? status.label,
         knowledgeBase: payload.knowledgeBase?.id && payload.knowledgeBase.title ? { id: payload.knowledgeBase.id, title: payload.knowledgeBase.title, sourceCount: payload.sourceCount ?? 1 } : undefined,
         sources: payload.sources,
         suggestions: payload.suggestions,
@@ -100,13 +103,18 @@ export function AssistantPanel({ station, source, simulationEnabled, demoDisplay
       </div>
       {open && <div className="assistant-body">
         <div className="assistant-context"><b>{station.name}</b><span>{station.ntu.toFixed(1)} NTU · {status.label}</span><small>{status.notice}</small></div>
-        {accessLoading ? <p className="assistant-info">Memeriksa akses akun…</p> : !access ? <div className="assistant-login"><p>Masuk diperlukan agar pertanyaan terhubung ke scope Supabase yang diizinkan.</p><button type="button" onClick={onOpenFieldMode}>Buka Field Mode untuk masuk →</button></div> : <>
+        {accessLoading ? <p className="assistant-info">Memeriksa akses akun…</p> : !access ? <>
+          <p className="assistant-info">Pengunjung belum masuk dapat bertanya hal umum seperti &quot;Apa itu NTU?&quot;. Untuk pertanyaan tentang data stasiun ini, <button type="button" className="assistant-inline-link" onClick={onOpenFieldMode}>masuk lewat Catat Hasil Ukur</button>.</p>
+          <div className="assistant-quick" aria-label="Contoh pertanyaan umum">{["Apa itu NTU?", "Apa perbedaan NTU dan pH?", "Kenapa air sungai bisa keruh?"].map((question) => <button type="button" key={question} disabled={submitting} onClick={() => void askAssistant(question)}>{question}</button>)}</div>
+          <div className="assistant-messages" aria-live="polite">{messages.length === 0 ? <p className="assistant-empty">Saya dapat menjelaskan dasar kualitas air dari Knowledge Base tanpa perlu masuk.</p> : messages.map((message) => <article key={message.id} className={message.role}><span>{message.role === "user" ? "Anda" : "Asisten Jernih"}{message.role === "assistant" && message.sourceLabel ? ` · ${message.sourceLabel}` : ""}</span><p>{message.text}</p>{message.role === "assistant" && message.sources && <><div className="assistant-sources"><span>{message.sources.length > 1 ? "Dasar analisis" : "Sumber"}</span>{message.sources.map((item) => <strong key={item.type}>{item.type === "knowledge_base" ? "📚" : item.type === "historical_data" ? "📈" : "📊"} {item.label}</strong>)}<small>🔗 {message.sources.length} sumber referensi</small></div>{message.suggestions && message.suggestions.length > 0 && <div className="assistant-followups"><span>Pertanyaan lanjutan</span>{message.suggestions.map((suggestion) => <button type="button" key={suggestion} disabled={submitting} onClick={() => void askAssistant(suggestion)}>{suggestion}</button>)}</div>}</>}</article>)}</div>
+          <form className="assistant-form" onSubmit={submit}><label><span>Pertanyaan umum</span><textarea value={input} onChange={(event) => setInput(event.target.value)} maxLength={1000} rows={3} placeholder="Contoh: Apa itu NTU?" /></label><button type="submit" disabled={submitting || !input.trim()}>{submitting ? "Menganalisis…" : "Tanya Asisten"}</button></form>
+        </> : <>
           <div className="assistant-quick" aria-label="Contoh pertanyaan">{getQuickQuestions(station.name).map((question) => <button type="button" key={question} disabled={submitting} onClick={() => void askAssistant(question)}>{question}</button>)}</div>
           <div className="assistant-messages" aria-live="polite">{messages.length === 0 ? <p className="assistant-empty">Saya dapat merangkum tren dan status sumber data, serta menjelaskan dasar kualitas air dari Knowledge Base.</p> : messages.map((message) => <article key={message.id} className={message.role}><span>{message.role === "user" ? "Anda" : "Asisten Jernih"}{message.role === "assistant" && message.sourceLabel ? ` · ${message.sourceLabel}` : ""}</span><p>{message.text}</p>{message.role === "assistant" && message.sources && <><div className="assistant-sources"><span>{message.sources.length > 1 ? "Dasar analisis" : "Sumber"}</span>{message.sources.map((item) => <strong key={item.type}>{item.type === "knowledge_base" ? "📚" : item.type === "historical_data" ? "📈" : "📊"} {item.label}</strong>)}<small>🔗 {message.sources.length} sumber referensi</small></div>{message.suggestions && message.suggestions.length > 0 && <div className="assistant-followups"><span>Pertanyaan lanjutan</span>{message.suggestions.map((suggestion) => <button type="button" key={suggestion} disabled={submitting} onClick={() => void askAssistant(suggestion)}>{suggestion}</button>)}</div>}</>}</article>)}</div>
           <form className="assistant-form" onSubmit={submit}><label><span>Pertanyaan</span><textarea value={input} onChange={(event) => setInput(event.target.value)} maxLength={1000} rows={3} placeholder="Contoh: Ringkas tren NTU stasiun ini." /></label><button type="submit" disabled={submitting || !input.trim()}>{submitting ? "Menganalisis…" : "Tanya Asisten"}</button></form>
         </>}
         {error && <p className="assistant-error" role="alert">{error}</p>}
-        <p className="assistant-footnote">Akses Viewer dibatasi 5 pertanyaan per jam; Field Operator dan Admin 10. Asisten tetap read-only dan tidak menentukan air aman, tercemar, atau layak dikonsumsi.</p>
+        <p className="assistant-footnote">Pengunjung belum masuk: 3 pertanyaan umum per jam. Akses Viewer dibatasi 5 pertanyaan per jam; Field Operator dan Admin 10. Asisten tetap read-only dan tidak menentukan air aman, tercemar, atau layak dikonsumsi.</p>
       </div>}
     </section>
   );
