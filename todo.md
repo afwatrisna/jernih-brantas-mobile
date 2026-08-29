@@ -81,3 +81,4 @@
 - [x] Remove repetitive inline KB-01 lead-ins from AI responses and present knowledge sources in a separate clean citation block.
 - [x] Review and directly apply the relevant changes from the newly supplied pasted_content.txt.
 - [x] Replace the assistant empty-state phrase with the exact wording “dari Knowledge Base”.
+- [ ] Inspect and apply jernih-brantas-awam-friendly-update.zip, then validate install, tests, dev UI, and publication readiness.
