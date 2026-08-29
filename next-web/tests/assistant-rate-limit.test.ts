@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { consumeAssistantRequest } from "@/lib/assistant/rate-limit";
+import { consumeAnonymousEducationalRequest, consumeAssistantRequest } from "@/lib/assistant/rate-limit";
 
 describe("AI Asisten Jernih role-based rate limit", () => {
   it("allows five Viewer questions and blocks the sixth in one hour", () => {
@@ -45,5 +45,38 @@ describe("AI Asisten Jernih role-based rate limit", () => {
         limit: 10,
       });
     }
+  });
+});
+
+describe("AI Asisten Jernih anonymous educational rate limit", () => {
+  it("allows three anonymous educational questions and blocks the fourth in one hour", () => {
+    const identifier = `anon-test-${crypto.randomUUID()}`;
+    const now = 1_800_000_300_000;
+
+    for (let index = 0; index < 3; index += 1) {
+      expect(consumeAnonymousEducationalRequest(identifier, now + index)).toMatchObject({
+        allowed: true,
+        limit: 3,
+      });
+    }
+
+    expect(consumeAnonymousEducationalRequest(identifier, now + 4)).toMatchObject({
+      allowed: false,
+      remaining: 0,
+      limit: 3,
+    });
+  });
+
+  it("resets an anonymous window after one hour", () => {
+    const identifier = `anon-reset-${crypto.randomUUID()}`;
+    const now = 1_800_000_400_000;
+
+    for (let index = 0; index < 3; index += 1) consumeAnonymousEducationalRequest(identifier, now + index);
+
+    expect(consumeAnonymousEducationalRequest(identifier, now + 60 * 60 * 1000)).toMatchObject({
+      allowed: true,
+      remaining: 2,
+      limit: 3,
+    });
   });
 });
