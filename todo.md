@@ -86,3 +86,4 @@
 - [x] Restructure the Monitor layout to follow the supplied reference while preserving existing monitoring features.
 - [x] Rapikan kartu kondisi utama Monitor agar nilai, status, gauge, dan ringkasan bawah lebih seimbang di desktop dan mobile.
 - [x] Rapikan kartu hijau Monitor desktop: beri jarak judul ke nilai NTU, hapus badge Normal, dan hilangkan highlight transparan.
+- [x] Hapus list stasiun dari sidebar, hapus card Pengukuran Lapangan di samping peta pada desktop/mobile, dan lebarkan peta desktop tanpa mengubah layout mobile lain.

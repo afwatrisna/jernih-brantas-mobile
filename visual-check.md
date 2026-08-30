@@ -1,6 +1,5 @@
-# Desktop condition-card cleanup validation
+# Monitor simplification validation
 
-The updated desktop Monitor hero card was visually checked after the cleanup. The card has a transparent condition-summary background, no `.status-badge` inside the hero condition area, and a clear vertical separation: station title bottom at 210px and NTU value top at 216px. The hero card remains 190px high and the condition copy stays within the card. The removed Normal badge is still available elsewhere in the dashboard where station status is needed.
-## Final desktop cleanup
+The updated desktop preview confirms the sidebar now contains the brand and primary navigation only; the station list and its heading are absent. The map-side Pengukuran Lapangan promo card is absent from the rendered page, and the existing Monitor action bar still provides the path to Field Mode.
 
-After the final adjustment, the station title ends at 210px and the NTU value begins at 220px, giving a 10px vertical gap. The condition summary is transparent with 30px height, and the hero condition contains zero status badges. The condition text remains visible below the value without the previous highlight panel. The decorative card texture remains unchanged.
+A 390px embedded viewport check confirms the sidebar is hidden, mobile bottom navigation remains visible, mobile station cards remain visible, the desktop chip row remains hidden, and the map card is still rendered at 343px wide. The `.field-callout` element count is zero, so the removed field card does not appear on mobile or desktop. No other mobile layout element was changed.

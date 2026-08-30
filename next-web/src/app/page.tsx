@@ -560,12 +560,6 @@ export default function Home() {
             <NavButton active={section === "analytics"} icon="chart" label="Analitik" onClick={() => setSection("analytics")} />
             <NavButton active={section === "settings"} icon="settings" label="Pengaturan" onClick={() => setSection("settings")} />
           </div>
-          <div className="sidebar-divider" />
-          <span className="sidebar-label">TITIK PANTAU</span>
-          <div className="station-list">
-            {stations.map((station) => <button key={station.id} onClick={() => { selectStation(station.id); setSection("monitor"); }} className={`station-item ${station.id === activeId ? "selected" : ""}`}><i style={{ background: insights[station.id].color }} /><span><b>{station.name}</b><small>{station.subtitle}</small></span><strong>{formatNtu(station.ntu)}</strong></button>)}
-          </div>
-          <p className="local-note">◌ Data demo tetap simulasi. Catatan dari Catat Hasil Ukur diberi sumber manual dan tetap perlu verifikasi lapangan.</p>
         </aside>
 
         <section className="content">
@@ -593,7 +587,7 @@ export default function Home() {
             <section className="monitor-priority" aria-labelledby="monitor-priority-title"><div className="monitor-section-heading"><span>PRIORITAS HARI INI</span><h2 id="monitor-priority-title">Tinjau sebelum mengambil tindakan.</h2><p>Alert dan pola tidak biasa ditampilkan lebih dahulu; keduanya tetap memerlukan verifikasi lapangan.</p></div><AlertPanel stations={stations} insights={insights} onSelect={selectStation} onAnalytics={openAnalytics} /></section>
             <div className="monitor-action-bar" aria-label="Tindakan monitor"><button type="button" className="monitor-action-primary" onClick={() => setSection("field")}><span><Icon name="field" /> PENGUKURAN LAPANGAN</span><b>Catat Hasil Ukur →</b></button><button type="button" className="monitor-action-secondary" onClick={() => openAnalytics()}><span><Icon name="chart" /> INVESTIGASI DATA</span><b>Lihat Analitik →</b></button></div>
             <AssistantPanel station={activeStation} source={activeSource} simulationEnabled={simulation} demoDisplayMode={demoDisplayMode} access={fieldAccess} accessLoading={fieldAccessLoading} onOpenFieldMode={() => setSection("field")} />
-            <div className="monitor-explore"><RiverMap stations={stations} insights={insights} activeId={activeId} filter={mapFilter} onFilter={setMapFilter} onSelect={selectStation} onOpenAnalytics={() => openAnalytics()} /><section className="field-callout"><Icon name="field" /><span>PENGUKURAN LAPANGAN</span><h2>Siap mencatat hasil turbidimeter?</h2><p>Catat Hasil Ukur dapat digunakan untuk memverifikasi titik yang mengalami alert atau perubahan tidak biasa.</p><button onClick={() => setSection("field")}>Catat Hasil Ukur <b>→</b></button></section></div>
+            <div className="monitor-explore"><RiverMap stations={stations} insights={insights} activeId={activeId} filter={mapFilter} onFilter={setMapFilter} onSelect={selectStation} onOpenAnalytics={() => openAnalytics()} /></div>
           </section>}
 
           {section === "field" && <>

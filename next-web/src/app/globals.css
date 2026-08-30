@@ -92,3 +92,10 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline:3px so
 @media (max-width:900px) {
   .monitor-station-chips { display:none; }
 }
+
+/* Simplified Monitor map area */
+.monitor-explore { grid-template-columns:minmax(0,1fr); }
+.monitor-explore .map-card { width:100%; }
+@media (min-width:901px) {
+  .monitor-explore { grid-template-columns:minmax(0,1fr); }
+}
