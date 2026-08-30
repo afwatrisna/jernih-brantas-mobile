@@ -141,6 +141,13 @@ function getStationInsight(station: StationState, readings: Reading[]): StationI
   return { severity, ...SEVERITY_META[severity], deviation, anomaly, alertState };
 }
 
+function getConditionCopy(insight: StationInsight) {
+  if (insight.severity === "critical") return { title: "Kondisi: sangat perlu ditinjau.", detail: "Nilai berada jauh di atas baseline dan perlu verifikasi lapangan." };
+  if (insight.severity === "high") return { title: "Kondisi: perlu ditinjau.", detail: "Nilai melewati ambang perhatian dan perlu verifikasi lapangan." };
+  if (insight.severity === "warning") return { title: "Kondisi: perlu diperhatikan.", detail: "Air agak lebih keruh dari biasanya." };
+  return { title: "Kondisi: dalam pola normal.", detail: "Nilai masih berada di sekitar baseline stasiun." };
+}
+
 function Icon({ name }: { name: "grid" | "field" | "chart" | "settings" | "water" | "map" | "plus" | "check" | "restart" | "shield" | "database" | "alert" | "trend" | "download" }) {
   const map: Record<string, string> = {
     grid: "▦",
@@ -544,6 +551,7 @@ export default function Home() {
 
       <div className="workspace">
         <aside className="sidebar">
+          <button className="sidebar-brand" onClick={() => setSection("monitor")} aria-label="Beranda Jernih"><span className="brand-mark">◒</span><span><b>Jernih</b><small>BRANTAS · NEXT</small></span></button>
           <span className="sidebar-label">RUANG KERJA</span>
           <div className="sidebar-nav">
             <NavButton active={section === "monitor"} icon="grid" label="Monitor" onClick={() => setSection("monitor")} />
@@ -568,14 +576,14 @@ export default function Home() {
           </div>
 
           {section === "monitor" && <section className="monitor-page">
-            <section className="intro monitor-intro"><span className="mode-eyebrow"><Icon name="water" /> MONITOR · KONDISI SAAT INI</span><h1>Kondisi sungai,<br />lebih mudah dipahami.</h1><p>Mulai dari kondisi stasiun, periksa keandalan sumber data, lalu tindak lanjuti peringatan atau pola yang perlu ditinjau.</p></section>
+            <section className="intro monitor-intro"><h1>Monitor</h1><p>Kondisi sungai secara langsung, per titik pantau.</p></section>
+            <div className="monitor-station-chips" aria-label="Pilih stasiun monitor">{stations.map((station) => <button type="button" key={station.id} onClick={() => selectStation(station.id)} className={station.id === activeId ? "selected" : ""}><i style={{ background: insights[station.id].color }} /><span>{station.name}</span></button>)}</div>
             <div className="mobile-stations">{stations.map((station) => <button key={station.id} onClick={() => selectStation(station.id)} className={station.id === activeId ? "selected" : ""}><b>{station.name}</b><span>{formatNtu(station.ntu)} NTU</span><i style={{ background: insights[station.id].color }} /></button>)}</div>
             <section className={`hero-card severity-${activeInsight.severity}`}>
-              <div><span className="hero-river">SUNGAI BRANTAS · {activeStation.subtitle.toUpperCase()}</span><h2>{activeStation.name}</h2></div>
+              <div className="hero-heading"><span className="hero-river">SUNGAI BRANTAS · {activeStation.subtitle.toUpperCase()}</span><h2>{activeStation.name}</h2></div>
               <span className={`live-status ${simulation ? "live" : "paused"}`}><i />{simulation ? "SIMULASI AKTIF" : "SIMULASI DIJEDA"}</span>
               <div className="hero-value"><strong key={activeStation.ntu}>{formatNtu(activeStation.ntu)}</strong><span>NTU</span></div>
-              <div className="class-pill" style={{ background: activeClass.softColor, color: activeClass.color }}><i style={{ background: activeClass.color }} />{activeClass.label} · Kelas {activeClass.grade}</div>
-              <div className="hero-status"><StatusBadge insight={activeInsight} compact />{activeInsight.anomaly && <span>↗ {activeInsight.anomaly}</span>}</div>
+              <div className="hero-condition"><div><strong>{getConditionCopy(activeInsight).title}</strong><span>{getConditionCopy(activeInsight).detail} {activeClass.label} · Kelas {activeClass.grade}.</span></div><StatusBadge insight={activeInsight} compact /></div>
               <div className="gauge"><div className="gauge-track"><i style={{ height: `${Math.min(100, Math.max(4, activeStation.ntu))}%` }} /></div><span>100</span><span>50</span><span>0</span></div>
             </section>
             <p className="hero-plain-explainer">{NTU_PLAIN_EXPLANATION} Kelas {activeClass.grade}: {WATER_CLASS_PLAIN_LABEL[activeClass.grade]}.</p>

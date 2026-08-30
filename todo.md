@@ -83,3 +83,4 @@
 - [x] Replace the assistant empty-state phrase with the exact wording “dari Knowledge Base”.
 - [x] Inspect and apply jernih-brantas-awam-friendly-update.zip, then validate install, tests, dev UI, and publication readiness.
 - [x] Remove the desktop top-bar navigation while preserving the desktop side navigation and mobile navigation.
+- [x] Restructure the Monitor layout to follow the supplied reference while preserving existing monitoring features.

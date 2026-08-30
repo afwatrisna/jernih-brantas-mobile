@@ -44,3 +44,51 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline:3px so
 @media (max-width:1240px){.analytics-toolbar{grid-template-columns:1fr;gap:10px}.analytics-toolbar-controls{grid-template-columns:minmax(100px,.75fr) minmax(156px,1.25fr) auto}}
 @media (max-width:900px){.field-access-primary{margin:0 0 14px}.analytics-toolbar-controls{grid-template-columns:minmax(100px,.75fr) minmax(156px,1.25fr) auto}}
 @media (max-width:600px){.field-access-primary{align-items:flex-start;padding:13px}.field-access-primary .field-auth-controls{width:100%;flex-basis:100%;flex-direction:column}.field-access-primary .field-auth-controls input,.field-access-primary .field-auth-action{width:100%;min-height:42px}.field-form-heading{margin-bottom:15px}.field-form-heading h2{font-size:18px}.field-form .save-button{min-height:54px}.analytics-toolbar{padding:12px}.analytics-toolbar-context{align-items:flex-start}.analytics-toolbar-context .status-badge{margin-top:1px}.analytics-toolbar-controls{grid-template-columns:1fr;gap:10px}.analytics-station-select select{height:42px}.analytics-range-group>div{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.analytics-range-group button{width:100%;height:40px}.analytics-export-button{width:100%;height:42px}.analytics-metrics{margin-top:0}}
+
+/* Reference-inspired Monitor layout */
+.sidebar-brand { width:100%; margin:0 0 24px; padding:0 7px; border:0; border-radius:10px; color:var(--ink); background:transparent; display:flex; align-items:center; gap:8px; text-align:left; }
+.sidebar-brand:hover { background:#f3efe7; }
+.sidebar-brand .brand-mark { width:28px; height:28px; border-radius:9px; font-size:16px; }
+.sidebar-brand b { display:block; font-family:Georgia,serif; font-size:14px; line-height:15px; }
+.sidebar-brand small { display:block; margin-top:3px; color:var(--muted); font:700 7px monospace; letter-spacing:.8px; }
+.monitor-station-chips { display:flex; flex-wrap:wrap; gap:7px; margin:-2px 0 1px; }
+.monitor-station-chips button { min-height:32px; padding:0 11px; border:1px solid var(--line); border-radius:999px; color:var(--muted); background:var(--paper); display:inline-flex; align-items:center; gap:6px; font-size:10px; font-weight:700; white-space:nowrap; transition:background .16s ease,color .16s ease,border-color .16s ease,transform .16s ease; }
+.monitor-station-chips button:hover { border-color:#a9cbbb; color:var(--deep); background:#edf6f0; }
+.monitor-station-chips button:active { transform:scale(.97); }
+.monitor-station-chips button.selected { border-color:var(--deep); color:#fff; background:var(--deep); }
+.monitor-station-chips i { width:6px; height:6px; border-radius:50%; flex:none; }
+.monitor-station-chips button.selected i { background:#b7e0cd !important; }
+.hero-heading { position:relative; z-index:1; }
+.hero-condition { position:absolute; z-index:1; right:20px; bottom:17px; left:20px; min-height:42px; padding:8px 11px; border-radius:10px; background:rgba(255,253,248,.12); display:flex; align-items:center; gap:12px; }
+.hero-condition>div { min-width:0; flex:1; }
+.hero-condition strong { display:block; color:#fffdf8; font-size:10px; line-height:14px; }
+.hero-condition span { display:block; margin-top:2px; overflow:hidden; color:#c4d6ce; font-size:9px; line-height:13px; text-overflow:ellipsis; white-space:nowrap; }
+.hero-condition .status-badge { flex:none; }
+@media (min-width:901px) {
+  .app-shell { padding:0; }
+  .topbar { display:none; }
+  .workspace { max-width:none; min-height:100vh; grid-template-columns:180px minmax(0,1fr); gap:0; }
+  .sidebar { min-height:100vh; height:auto; position:sticky; top:0; align-self:start; padding:19px 10px 18px; border:0; border-right:1px solid var(--line); border-radius:0; background:rgba(255,253,248,.82); }
+  .content { width:100%; max-width:1060px; padding:25px 28px 45px; margin:0 auto; }
+  .monitor-page { gap:14px; }
+  .monitor-intro { margin-bottom:1px; }
+  .monitor-intro h1 { margin:0 0 5px; font-size:28px; letter-spacing:-.6px; }
+  .monitor-intro p { font-size:11px; line-height:17px; }
+  .monitor-station-chips { margin-top:0; }
+  .hero-card { min-height:190px; padding:20px; border-radius:18px; }
+  .hero-river { font-size:8px; letter-spacing:.7px; }
+  .hero-card h2 { font-size:20px; }
+  .live-status { top:18px; right:18px; padding:6px 8px; font-size:8px; }
+  .hero-value { top:63px; bottom:auto; left:20px; }
+  .hero-value strong { font-size:50px; }
+  .class-pill { display:none; }
+  .hero-status { display:none; }
+  .hero-condition { right:20px; bottom:16px; left:20px; }
+  .gauge { top:63px; right:28px; transform:scale(.78); transform-origin:top right; }
+  .hero-plain-explainer { margin:0; font-size:10px; line-height:15px; }
+  .metric-grid { margin-top:0; }
+  .monitor-priority { margin-top:2px; }
+}
+@media (max-width:900px) {
+  .monitor-station-chips { display:none; }
+}

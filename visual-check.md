@@ -1,2 +1,3 @@
+# Monitor layout validation notes
 
-Desktop navigation verification after the change: viewport 1280px wide; `.topnav` count is 0; `.sidebar` is visible at 246px; `.mobile-nav` remains in the DOM but is hidden; the top bar contains only the Jernih brand and `NEXT.JS DEMO` badge. The main layout remains aligned in the preview.
+The updated Next.js Monitor preview was checked at a 1280px viewport. The top navigation element is absent; the side navigation remains visible at 180px wide. The station-chip row is visible with five station buttons above the main condition card. The compact hero card renders at 190px high with the condition summary visible, and the mobile-stations layout is hidden at desktop width. The main dashboard content remains aligned and the existing trust, metrics, priority, assistant, map, and Field Mode sections remain below the new Monitor header/hero structure.
