@@ -1,3 +1,5 @@
-# Monitor layout validation notes
+# Condition card validation notes
 
-The updated Next.js Monitor preview was checked at a 1280px viewport. The top navigation element is absent; the side navigation remains visible at 180px wide. The station-chip row is visible with five station buttons above the main condition card. The compact hero card renders at 190px high with the condition summary visible, and the mobile-stations layout is hidden at desktop width. The main dashboard content remains aligned and the existing trust, metrics, priority, assistant, map, and Field Mode sections remain below the new Monitor header/hero structure.
+The reference screenshot was inspected as the single ordered tile at 554x160. The intended hierarchy is a compact dark green card with station context and name at the upper left, a prominent NTU value below, a small simulation badge at the upper right, a subtle gauge on the right, and a single readable condition summary bar across the bottom.
+
+The updated Next.js preview was checked at desktop width. The condition summary renders with separate text and status-pill alignment; the compact hero remains 190px high without overlap. A hidden 390px iframe check confirmed the mobile station-card controls remain visible, the desktop station-chip row is hidden, the mobile bottom navigation is present, and the hero remains contained at 343px wide and 265px high.
