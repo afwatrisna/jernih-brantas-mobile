@@ -59,11 +59,11 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline:3px so
 .monitor-station-chips i { width:6px; height:6px; border-radius:50%; flex:none; }
 .monitor-station-chips button.selected i { background:#b7e0cd !important; }
 .hero-heading { position:relative; z-index:1; }
-.hero-condition { position:absolute; z-index:1; right:20px; bottom:17px; left:20px; min-height:42px; padding:8px 11px; border-radius:10px; background:rgba(255,253,248,.12); display:flex; align-items:center; gap:12px; }
+.hero-condition { position:absolute; z-index:1; right:20px; bottom:17px; left:20px; min-height:30px; padding:0; display:flex; align-items:flex-start; }
 .hero-condition>div { min-width:0; flex:1; }
 .hero-condition strong { display:block; color:#fffdf8; font-size:10px; line-height:14px; }
-.hero-condition>div>span { display:block; margin-top:2px; overflow:hidden; color:#c4d6ce; font-size:9px; line-height:13px; text-overflow:ellipsis; white-space:nowrap; }
-.hero-condition .status-badge { display:inline-flex; flex:none; align-items:center; white-space:nowrap; }
+.hero-condition>div>span { display:block; margin-top:3px; overflow:hidden; color:#b7c8c0; font-size:9px; line-height:13px; text-overflow:ellipsis; white-space:nowrap; }
+.hero-condition .status-badge { display:none; }
 @media (min-width:901px) {
   .app-shell { padding:0; }
   .topbar { display:none; }
@@ -79,12 +79,12 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline:3px so
   .hero-river { font-size:8px; letter-spacing:.7px; }
   .hero-card h2 { font-size:20px; }
   .live-status { top:18px; right:18px; padding:6px 8px; font-size:8px; }
-  .hero-value { top:63px; bottom:auto; left:20px; }
+  .hero-value { top:82px; bottom:auto; left:20px; }
   .hero-value strong { font-size:50px; }
   .class-pill { display:none; }
   .hero-status { display:none; }
-  .hero-condition { right:20px; bottom:16px; left:20px; }
-  .gauge { top:63px; right:28px; transform:scale(.78); transform-origin:top right; }
+  .hero-condition { right:20px; bottom:16px; left:20px; min-height:30px; }
+  .gauge { top:72px; right:28px; transform:scale(.78); transform-origin:top right; }
   .hero-plain-explainer { margin:0; font-size:10px; line-height:15px; }
   .metric-grid { margin-top:0; }
   .monitor-priority { margin-top:2px; }

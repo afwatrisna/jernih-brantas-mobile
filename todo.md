@@ -85,3 +85,4 @@
 - [x] Remove the desktop top-bar navigation while preserving the desktop side navigation and mobile navigation.
 - [x] Restructure the Monitor layout to follow the supplied reference while preserving existing monitoring features.
 - [x] Rapikan kartu kondisi utama Monitor agar nilai, status, gauge, dan ringkasan bawah lebih seimbang di desktop dan mobile.
+- [x] Rapikan kartu hijau Monitor desktop: beri jarak judul ke nilai NTU, hapus badge Normal, dan hilangkan highlight transparan.

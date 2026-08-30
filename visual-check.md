@@ -1,5 +1,6 @@
-# Condition card validation notes
+# Desktop condition-card cleanup validation
 
-The reference screenshot was inspected as the single ordered tile at 554x160. The intended hierarchy is a compact dark green card with station context and name at the upper left, a prominent NTU value below, a small simulation badge at the upper right, a subtle gauge on the right, and a single readable condition summary bar across the bottom.
+The updated desktop Monitor hero card was visually checked after the cleanup. The card has a transparent condition-summary background, no `.status-badge` inside the hero condition area, and a clear vertical separation: station title bottom at 210px and NTU value top at 216px. The hero card remains 190px high and the condition copy stays within the card. The removed Normal badge is still available elsewhere in the dashboard where station status is needed.
+## Final desktop cleanup
 
-The updated Next.js preview was checked at desktop width. The condition summary renders with separate text and status-pill alignment; the compact hero remains 190px high without overlap. A hidden 390px iframe check confirmed the mobile station-card controls remain visible, the desktop station-chip row is hidden, the mobile bottom navigation is present, and the hero remains contained at 343px wide and 265px high.
+After the final adjustment, the station title ends at 210px and the NTU value begins at 220px, giving a 10px vertical gap. The condition summary is transparent with 30px height, and the hero condition contains zero status badges. The condition text remains visible below the value without the previous highlight panel. The decorative card texture remains unchanged.
