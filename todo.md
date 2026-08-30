@@ -82,3 +82,4 @@
 - [x] Review and directly apply the relevant changes from the newly supplied pasted_content.txt.
 - [x] Replace the assistant empty-state phrase with the exact wording “dari Knowledge Base”.
 - [x] Inspect and apply jernih-brantas-awam-friendly-update.zip, then validate install, tests, dev UI, and publication readiness.
+- [x] Remove the desktop top-bar navigation while preserving the desktop side navigation and mobile navigation.

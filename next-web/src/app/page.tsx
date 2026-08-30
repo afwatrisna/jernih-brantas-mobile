@@ -539,12 +539,6 @@ export default function Home() {
     <main className="app-shell">
       <header className="topbar">
         <button className="brand" onClick={() => setSection("monitor")} aria-label="Beranda Jernih"><span className="brand-mark">◒</span><span><b>Jernih</b><small>BRANTAS · NEXT</small></span></button>
-        <nav className="topnav" aria-label="Navigasi utama">
-          <NavButton active={section === "monitor"} icon="grid" label="Monitor" onClick={() => setSection("monitor")} />
-          <NavButton active={section === "field"} icon="field" label="Catat Hasil Ukur" onClick={() => setSection("field")} />
-          <NavButton active={section === "analytics"} icon="chart" label="Analitik" onClick={() => setSection("analytics")} />
-          <NavButton active={section === "settings"} icon="settings" label="Atur" onClick={() => setSection("settings")} />
-        </nav>
         <span className="demo-badge"><i /> NEXT.JS DEMO</span>
       </header>
 
