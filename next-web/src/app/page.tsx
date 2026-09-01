@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   EQUIPMENT,
   NTU_PLAIN_EXPLANATION,
@@ -200,55 +201,10 @@ function DataTrust({ source, simulation, updatedAt, equipment }: { source: Readi
   );
 }
 
-function RiverMap({
-  stations,
-  insights,
-  activeId,
-  filter,
-  onFilter,
-  onSelect,
-  onOpenAnalytics,
-}: {
-  stations: StationState[];
-  insights: Record<string, StationInsight>;
-  activeId: string;
-  filter: MapFilter;
-  onFilter: (filter: MapFilter) => void;
-  onSelect: (id: string) => void;
-  onOpenAnalytics: () => void;
-}) {
-  const selected = stations.find((station) => station.id === activeId) ?? stations[0];
-  const insight = insights[selected.id];
-  const visibleStations = stations.filter((station) => {
-    const status = insights[station.id];
-    if (filter === "normal") return status.severity === "normal";
-    if (filter === "warning") return status.severity === "warning";
-    if (filter === "alert") return status.alertState === "active";
-    if (filter === "anomaly") return Boolean(status.anomaly);
-    return true;
-  });
-  return (
-    <section className="surface-card map-card">
-      <div className="card-heading"><div><h2>Aliran & titik pantau</h2><p>Marker menampilkan status, alert aktif, dan pola yang tidak biasa.</p></div><Icon name="map" /></div>
-      <div className="map-filter" aria-label="Filter status peta">
-        {(["all", "normal", "warning", "alert", "anomaly"] as MapFilter[]).map((item) => <button key={item} type="button" className={filter === item ? "active" : ""} onClick={() => onFilter(item)}>{item === "all" ? "Semua" : item === "alert" ? "Alert" : item === "anomaly" ? "Anomali" : item === "normal" ? "Normal" : "Warning"}</button>)}
-      </div>
-      <div className="river-map" aria-label="Peta ilustratif titik pantau Sungai Brantas">
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M 13 17 C 20 25, 24 33, 29 38 C 36 44, 41 50, 47 54 C 54 59, 57 65, 62 68 C 69 72, 75 78, 81 82" />
-          <path className="river-highlight" d="M 13 17 C 20 25, 24 33, 29 38 C 36 44, 41 50, 47 54 C 54 59, 57 65, 62 68 C 69 72, 75 78, 81 82" />
-          <text x="6" y="12" className="river-direction">HULU</text><text x="94" y="94" textAnchor="end" className="river-direction">HILIR</text>
-        </svg>
-        {visibleStations.map((station) => {
-          const stationInsight = insights[station.id];
-          return <button key={station.id} className={`map-marker ${station.id === activeId ? "selected" : ""} severity-${stationInsight.severity} ${stationInsight.anomaly ? "has-anomaly" : ""}`} onClick={() => onSelect(station.id)} style={{ left: `${station.x}%`, top: `${station.y}%`, "--marker": stationInsight.color } as CSSProperties} aria-label={`${station.name}: ${formatNtu(station.ntu)} NTU, ${stationInsight.label}`} />;
-        })}
-        {visibleStations.length === 0 && <p className="map-empty">Tidak ada stasiun pada filter ini.</p>}
-      </div>
-      <div className="map-selection"><div className="map-tooltip-heading"><div><span>STASIUN DIPILIH</span><strong>{selected.name}</strong></div><StatusBadge insight={insight} compact /></div><p>{formatNtu(selected.ntu)} NTU · {formatPercent(insight.deviation)} vs baseline{insight.alertState === "active" ? " · 1 alert aktif" : ""}{insight.anomaly ? ` · ${insight.anomaly}` : ""}</p><button type="button" onClick={onOpenAnalytics}>Lihat analitik →</button></div>
-    </section>
-  );
-}
+const BrantasMap = dynamic(
+  () => import("../components/brantas-map").then((module) => module.BrantasMap),
+  { ssr: false, loading: () => <div className="leaflet-map-placeholder">Memuat peta interaktif…</div> },
+);
 
 function TrendChart({ readings, baseline }: { readings: Reading[]; baseline: number }) {
   const data = readings.slice(-48);
@@ -585,7 +541,7 @@ export default function Home() {
             <div className="metric-grid"><article><Icon name="water" /><strong>{formatNtu(average)}</strong><span>Rata-rata sungai</span></article><article className="positive"><Icon name="check" /><strong>{compliant} / 5</strong><span>Sesuai Kelas II</span></article><article className={activeAlerts > 0 ? "attention" : ""}><Icon name="alert" /><strong>{activeAlerts}</strong><span>Alert aktif</span></article><article><Icon name="database" /><strong>{recordCount}</strong><span>{demoDisplayMode ? "Catatan demo aktif" : hasRemoteReadings ? "Catatan Supabase" : "Catatan demo"}</span></article></div>
             <section className="monitor-priority" aria-labelledby="monitor-priority-title"><div className="monitor-section-heading"><span>PRIORITAS HARI INI</span><h2 id="monitor-priority-title">Tinjau sebelum mengambil tindakan.</h2><p>Alert dan pola tidak biasa ditampilkan lebih dahulu; keduanya tetap memerlukan verifikasi lapangan.</p></div><AlertPanel stations={stations} insights={insights} onSelect={selectStation} onAnalytics={openAnalytics} /></section>
             <div className="monitor-action-bar" aria-label="Tindakan monitor"><button type="button" className="monitor-action-primary" onClick={() => setSection("field")}><span><Icon name="field" /> PENGUKURAN LAPANGAN</span><b>Catat Hasil Ukur →</b></button><button type="button" className="monitor-action-secondary" onClick={() => openAnalytics()}><span><Icon name="chart" /> INVESTIGASI DATA</span><b>Lihat Analitik →</b></button></div>
-            <div className="monitor-explore"><RiverMap stations={stations} insights={insights} activeId={activeId} filter={mapFilter} onFilter={setMapFilter} onSelect={selectStation} onOpenAnalytics={() => openAnalytics()} /></div>
+            <div className="monitor-explore"><BrantasMap stations={stations} insights={insights} activeId={activeId} filter={mapFilter} onFilter={setMapFilter} onSelect={selectStation} onOpenAnalytics={() => openAnalytics()} /></div>
           </section>}
 
           {section === "field" && <>

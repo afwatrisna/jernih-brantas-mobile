@@ -88,3 +88,4 @@
 - [x] Rapikan kartu hijau Monitor desktop: beri jarak judul ke nilai NTU, hapus badge Normal, dan hilangkan highlight transparan.
 - [x] Hapus list stasiun dari sidebar, hapus card Pengukuran Lapangan di samping peta pada desktop/mobile, dan lebarkan peta desktop tanpa mengubah layout mobile lain.
 - [x] Hapus tampilan AI Assistant dari UI sementara, tetapi pertahankan route API, policy, knowledge base, dan fondasi rate limit untuk diaktifkan kembali nanti.
+- [x] Replace the static SVG river map with a client-only Leaflet/OpenStreetMap map using the supplied GeoJSON, station markers, filters, permanent-name toggle, and responsive styling.
