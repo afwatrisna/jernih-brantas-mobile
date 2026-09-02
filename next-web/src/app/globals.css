@@ -108,3 +108,6 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline:3px so
 @media (prefers-reduced-motion:reduce){.brantas-marker-dot.severity-high,.brantas-marker-dot.severity-critical{animation:none}.brantas-marker-dot{transition:none}}
 
 .brantas-marker-dot.severity-normal{--marker:#2d6a5c;color:#2d6a5c}.brantas-marker-dot.severity-warning{--marker:#a27719;color:#a27719}.brantas-marker-dot.severity-high{--marker:#c4622d;color:#c4622d}.brantas-marker-dot.severity-critical{--marker:#8b3a1f;color:#8b3a1f}
+
+.map-legend{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;margin:10px 2px 0;color:var(--muted);font-size:12px;line-height:18px}.map-legend-item{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.map-legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--river)}.map-legend-dot.warning{background:#a27719}.map-legend-dot.review{background:#c4622d}.map-legend-line{display:inline-block;width:18px;height:0;border-top:3px solid #0c447c;border-radius:99px}
+@media (max-width:600px){.map-legend{gap:6px 12px;font-size:11px;line-height:16px}}

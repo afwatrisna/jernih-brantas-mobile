@@ -35,3 +35,7 @@ The Anomali filter correctly produces the map empty state without removing the m
 ## Marker selection check
 
 A visible Leaflet marker activates successfully. The popup shows the station name, subtitle, NTU reading, and current Normal status, while the selected-station summary remains available below the map. The existing station-selection callback is therefore connected to the new map.
+
+## Updated GeoJSON preview check
+
+The Monitor preview shows the new Brantas MultiLineString route across the map, including the Kali Porong branch toward Porong/Sidoarjo. The five station labels now include `Porong / Sidoarjo Hilir`, the sensor-name checkbox is checked by default, and the legend below the map renders Normal, Waspada, Perlu ditinjau, and Aliran sungai without overflow.

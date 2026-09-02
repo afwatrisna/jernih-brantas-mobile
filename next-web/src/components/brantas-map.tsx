@@ -52,7 +52,7 @@ const FILTERS: Array<{ id: BrantasMapFilter; label: string }> = [
 function filterGeoJson(data: FeatureCollection): GeoJsonObject {
   const features = data.features.filter((feature) => {
     const name = feature.properties?.name;
-    return feature.geometry?.type === "LineString" && typeof name === "string" && name.toLowerCase().includes("brantas");
+    return (feature.geometry?.type === "LineString" || feature.geometry?.type === "MultiLineString") && typeof name === "string" && name.toLowerCase().includes("brantas");
   });
   return { ...data, features } as GeoJsonObject;
 }
@@ -86,7 +86,7 @@ export function BrantasMap({
 }: BrantasMapProps) {
   const [geoJson, setGeoJson] = useState<GeoJsonObject | null>(null);
   const [geoJsonError, setGeoJsonError] = useState("");
-  const [showLabels, setShowLabels] = useState(false);
+  const [showLabels, setShowLabels] = useState(true);
   const selected = stations.find((station) => station.id === activeId) ?? stations[0];
   const selectedInsight = selected ? insights[selected.id] : undefined;
 
@@ -194,6 +194,13 @@ export function BrantasMap({
         </MapContainer>
         {geoJsonError && <p className="map-data-error">{geoJsonError}</p>}
         {!geoJson && !geoJsonError && <p className="map-loading">Memuat aliran Sungai Brantas…</p>}
+      </div>
+
+      <div className="map-legend" aria-label="Legenda peta">
+        <span className="map-legend-item"><i className="map-legend-dot normal" aria-hidden="true" />Normal</span>
+        <span className="map-legend-item"><i className="map-legend-dot warning" aria-hidden="true" />Waspada</span>
+        <span className="map-legend-item"><i className="map-legend-dot review" aria-hidden="true" />Perlu ditinjau</span>
+        <span className="map-legend-item"><i className="map-legend-line" aria-hidden="true" />Aliran sungai</span>
       </div>
 
       <div className="map-selection">
