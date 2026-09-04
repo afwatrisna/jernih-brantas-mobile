@@ -185,19 +185,25 @@ function DataTrust({ source, simulation, updatedAt, equipment }: { source: Readi
   const trust = trustCopy(source, simulation);
   const isManual = source === "manual";
   return (
-    <section className="trust-strip" aria-label="Status kepercayaan data" aria-live="polite">
-      <div className="trust-heading">
-        <span className="trust-title"><Icon name="shield" /> DATA TRUST</span>
-        <span className={`source-pill ${isManual ? "manual" : "simulation"}`}><i />{trust.label}</span>
+    <details className="trust-strip" aria-label="Status kepercayaan data">
+      <summary className="trust-summary">
+        <span className="trust-title"><Icon name="shield" /> DETAIL SUMBER DATA</span>
+        <span className="trust-summary-action">Lihat detail <b>+</b></span>
+      </summary>
+      <div className="trust-details" aria-live="polite">
+        <div className="trust-heading">
+          <span className="trust-title"><Icon name="shield" /> DATA TRUST</span>
+          <span className={`source-pill ${isManual ? "manual" : "simulation"}`}><i />{trust.label}</span>
+        </div>
+        <div className="trust-grid">
+          <div><span>PEMBARUAN</span><strong>{formatTime(updatedAt)} WIB</strong></div>
+          <div><span>SUMBER</span><strong>{equipment}</strong></div>
+          <div><span>VALIDASI</span><strong className={isManual || source === "simulation" ? "warning" : "good"}>{trust.detail}</strong></div>
+          <div><span>PENYIMPANAN</span><strong>Supabase + demo lokal</strong></div>
+        </div>
+        <p>{trust.note}</p>
       </div>
-      <div className="trust-grid">
-        <div><span>PEMBARUAN</span><strong>{formatTime(updatedAt)} WIB</strong></div>
-        <div><span>SUMBER</span><strong>{equipment}</strong></div>
-        <div><span>VALIDASI</span><strong className={isManual || source === "simulation" ? "warning" : "good"}>{trust.detail}</strong></div>
-        <div><span>PENYIMPANAN</span><strong>Supabase + demo lokal</strong></div>
-      </div>
-      <p>{trust.note}</p>
-    </section>
+    </details>
   );
 }
 
@@ -254,16 +260,32 @@ function AlertPanel({
   const resolvedAlerts = stations.filter((station) => insights[station.id].alertState === "resolved");
   const anomalyStations = stations.filter((station) => insights[station.id].anomaly);
   const priority = activeAlerts[0] ?? anomalyStations[0];
+  const priorityInsight = priority ? insights[priority.id] : null;
+  const anomalyCopy = priorityInsight?.anomaly === "Kenaikan cepat"
+    ? "Kenaikan cepat terdeteksi, tetapi belum melewati ambang."
+    : priorityInsight?.anomaly === "Abnormal berlanjut"
+      ? "Nilai tinggi berlanjut dalam beberapa pembacaan terakhir."
+      : priorityInsight?.anomaly
+        ? "Nilai menyimpang dari baseline dan perlu dipantau."
+        : "";
+  const mainStatus = priorityInsight?.severity === "critical"
+    ? "Critical"
+    : priorityInsight?.severity === "high"
+      ? "Perlu ditinjau"
+      : priorityInsight?.severity === "warning"
+        ? "Waspada"
+        : "Aman";
   return (
     <div className="insight-grid">
-      <section className={`alert-card ${priority ? `severity-${insights[priority.id].severity}` : "normal"}`}>
-        <div className="alert-heading"><span><Icon name="alert" /> PERINGATAN DINI</span>{priority ? <StatusBadge insight={insights[priority.id]} compact /> : <span className="quiet-label">Tidak ada alert aktif</span>}</div>
-        {priority ? <><h2>{insights[priority.id].alertState === "active" ? `${insights[priority.id].label.toUpperCase()} · KEKERUHAN` : "PERUBAHAN TIDAK BIASA"}</h2><strong>{priority.name}</strong><div className="alert-number">{formatNtu(priority.ntu)} <small>NTU</small></div><p>Baseline {formatNtu(priority.baseline)} NTU · {formatPercent(insights[priority.id].deviation)} · {insights[priority.id].anomaly ?? "Nilai perlu ditinjau"}</p><p className="alert-plain-explainer">Artinya: air di titik ini lebih keruh dari kondisi biasanya (baseline). Ini belum tentu berarti tercemar — bisa karena hujan atau sedimen — dan tetap perlu dicek petugas untuk kepastian.</p><div className="alert-actions"><button type="button" onClick={() => onSelect(priority.id)}>Lihat stasiun</button><button type="button" onClick={() => onAnalytics(priority.id)}>Riwayat →</button></div></> : <><h2>Semua terkendali</h2><p>Sistem akan menandai kenaikan cepat, penyimpangan baseline, dan status High/Critical ketika data simulasi atau input manual berubah.</p></>}
+      <section className={`alert-card ${priorityInsight ? `severity-${priorityInsight.severity}` : "normal"}`}>
+        <div className="alert-heading"><span><Icon name="alert" /> PERINGATAN DINI</span>{priorityInsight ? <StatusBadge insight={priorityInsight} compact /> : <span className="quiet-label">Tidak ada indikasi aktif</span>}</div>
+        {priority && priorityInsight ? <>
+          <h2>{mainStatus}{priorityInsight.severity !== "normal" ? " · turbidity meningkat" : ""}</h2>
+          <strong>{priorityInsight.severity === "normal" ? "Kondisi sesuai baseline stasiun." : priorityInsight.severity === "warning" ? "Nilai mendekati ambang perhatian." : "Nilai melewati ambang dan perlu ditinjau."}</strong>
+          {priorityInsight.anomaly && <div className="alert-anomaly-secondary"><div className="alert-divider" /><strong>Indikasi pola tidak biasa</strong><p>{anomalyCopy}</p></div>}
+          <div className="alert-actions"><button type="button" onClick={() => onSelect(priority.id)}>Lihat stasiun</button><button type="button" onClick={() => onAnalytics(priority.id)}>Riwayat →</button></div>
+        </> : <><h2>Aman</h2><strong>Kondisi sesuai baseline stasiun.</strong><p>Belum ada indikasi yang memerlukan perhatian khusus dari pembacaan saat ini.</p></>}
         {resolvedAlerts.length > 0 && <small className="resolved-note">{resolvedAlerts.length} alert sebelumnya berstatus Resolved setelah pembacaan kembali normal.</small>}
-      </section>
-      <section className="anomaly-card surface-card">
-        <div className="card-heading"><div><h2>Deteksi anomali</h2><p>Pola tidak biasa, bukan penetapan pencemaran.</p></div><Icon name="trend" /></div>
-        {anomalyStations.length > 0 ? <div className="anomaly-summary"><span>POLA TIDAK BIASA</span><strong>{anomalyStations[0].name}</strong><p>{anomalyStations[0] && insights[anomalyStations[0].id].anomaly} · deviasi {formatPercent(insights[anomalyStations[0].id].deviation)} dari baseline.</p><button type="button" onClick={() => onAnalytics(anomalyStations[0].id)}>Buka data historis →</button></div> : <div className="anomaly-summary quiet"><span>POLA NORMAL</span><strong>Belum ada anomali</strong><p>Ambang akan ditinjau kembali setiap pembacaan baru.</p></div>}
       </section>
     </div>
   );
@@ -529,19 +551,19 @@ export default function Home() {
             <section className="intro monitor-intro"><h1>Monitor</h1><p>Kondisi sungai secara langsung, per titik pantau.</p></section>
             <div className="monitor-station-chips" aria-label="Pilih stasiun monitor">{stations.map((station) => <button type="button" key={station.id} onClick={() => selectStation(station.id)} className={station.id === activeId ? "selected" : ""}><i style={{ background: insights[station.id].color }} /><span>{station.name}</span></button>)}</div>
             <div className="mobile-stations">{stations.map((station) => <button key={station.id} onClick={() => selectStation(station.id)} className={station.id === activeId ? "selected" : ""}><b>{station.name}</b><span>{formatNtu(station.ntu)} NTU</span><i style={{ background: insights[station.id].color }} /></button>)}</div>
+            <div className="monitor-explore"><BrantasMap stations={stations} insights={insights} activeId={activeId} filter={mapFilter} onFilter={setMapFilter} onSelect={selectStation} onOpenAnalytics={() => openAnalytics()} /></div>
             <section className={`hero-card severity-${activeInsight.severity}`}>
-              <div className="hero-heading"><span className="hero-river">SUNGAI BRANTAS · {activeStation.subtitle.toUpperCase()}</span><h2>{activeStation.name}</h2></div>
+              <div className="hero-heading"><span className="hero-river">SUNGAI BRANTAS · {activeStation.subtitle.toUpperCase()}</span><h2>{activeStation.name}</h2><StatusBadge insight={activeInsight} compact /></div>
               <span className={`live-status ${simulation ? "live" : "paused"}`}><i />{simulation ? "SIMULASI AKTIF" : "SIMULASI DIJEDA"}</span>
               <div className="hero-value"><strong key={activeStation.ntu}>{formatNtu(activeStation.ntu)}</strong><span>NTU</span></div>
               <div className="hero-condition"><div><strong>{activeCondition.title}</strong><span>{activeCondition.detail} {activeClass.label} · Kelas {activeClass.grade}.</span></div></div>
               <div className="gauge"><div className="gauge-track"><i style={{ height: `${Math.min(100, Math.max(4, activeStation.ntu))}%` }} /></div><span>100</span><span>50</span><span>0</span></div>
             </section>
             <p className="hero-plain-explainer">{NTU_PLAIN_EXPLANATION} Kelas {activeClass.grade}: {WATER_CLASS_PLAIN_LABEL[activeClass.grade]}.</p>
-              <DataTrust source={activeSource} simulation={simulation} updatedAt={updatedAt} equipment={demoDisplayMode ? "NTU-Logger demo" : latest?.equipment ?? "NTU-Logger demo"} />
-            <div className="metric-grid"><article><Icon name="water" /><strong>{formatNtu(average)}</strong><span>Rata-rata sungai</span></article><article className="positive"><Icon name="check" /><strong>{compliant} / 5</strong><span>Sesuai Kelas II</span></article><article className={activeAlerts > 0 ? "attention" : ""}><Icon name="alert" /><strong>{activeAlerts}</strong><span>Alert aktif</span></article><article><Icon name="database" /><strong>{recordCount}</strong><span>{demoDisplayMode ? "Catatan demo aktif" : hasRemoteReadings ? "Catatan Supabase" : "Catatan demo"}</span></article></div>
+            <div className="metric-grid"><article><Icon name="water" /><strong>{formatNtu(average)}</strong><span>Rata-rata sungai</span></article><article className={compliant >= 4 ? "positive" : compliant >= 3 ? "attention" : "critical"}><Icon name="check" /><strong>{compliant} / 5</strong><span>Sesuai Kelas II</span></article><article className={activeAlerts > 0 ? "attention" : ""}><Icon name="alert" /><strong>{activeAlerts}</strong><span>Alert aktif</span></article><article><Icon name="database" /><strong>{recordCount}</strong><span>{demoDisplayMode ? "Catatan demo aktif" : hasRemoteReadings ? "Catatan Supabase" : "Catatan demo"}</span></article></div>
             <section className="monitor-priority" aria-labelledby="monitor-priority-title"><div className="monitor-section-heading"><span>PRIORITAS HARI INI</span><h2 id="monitor-priority-title">Tinjau sebelum mengambil tindakan.</h2><p>Alert dan pola tidak biasa ditampilkan lebih dahulu; keduanya tetap memerlukan verifikasi lapangan.</p></div><AlertPanel stations={stations} insights={insights} onSelect={selectStation} onAnalytics={openAnalytics} /></section>
-            <div className="monitor-action-bar" aria-label="Tindakan monitor"><button type="button" className="monitor-action-primary" onClick={() => setSection("field")}><span><Icon name="field" /> PENGUKURAN LAPANGAN</span><b>Catat Hasil Ukur →</b></button><button type="button" className="monitor-action-secondary" onClick={() => openAnalytics()}><span><Icon name="chart" /> INVESTIGASI DATA</span><b>Lihat Analitik →</b></button></div>
-            <div className="monitor-explore"><BrantasMap stations={stations} insights={insights} activeId={activeId} filter={mapFilter} onFilter={setMapFilter} onSelect={selectStation} onOpenAnalytics={() => openAnalytics()} /></div>
+            <div className="monitor-action-bar" aria-label="Tindakan monitor"><button type="button" className="monitor-action-primary" onClick={() => setSection("field")}><span><Icon name="field" /> Catat hasil ukur</span><b>→</b></button><button type="button" className="monitor-action-secondary" onClick={() => openAnalytics()}><span><Icon name="chart" /> Lihat analitik</span><b>→</b></button></div>
+            <DataTrust source={activeSource} simulation={simulation} updatedAt={updatedAt} equipment={demoDisplayMode ? "NTU-Logger demo" : latest?.equipment ?? "NTU-Logger demo"} />
           </section>}
 
           {section === "field" && <>

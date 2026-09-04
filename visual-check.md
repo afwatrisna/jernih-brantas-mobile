@@ -39,3 +39,7 @@ A visible Leaflet marker activates successfully. The popup shows the station nam
 ## Updated GeoJSON preview check
 
 The Monitor preview shows the new Brantas MultiLineString route across the map, including the Kali Porong branch toward Porong/Sidoarjo. The five station labels now include `Porong / Sidoarjo Hilir`, the sensor-name checkbox is checked by default, and the legend below the map renders Normal, Waspada, Perlu ditinjau, and Aliran sungai without overflow.
+
+## Homepage UI/UX revision preview check
+
+The updated Monitor preview renders the interactive map directly below the station chips and above the primary reading card. The hero shows a severity badge, metrics follow the hero, the warning/anomaly area is now one card, actions are compact side-by-side rows, and Data Trust is collapsed by default with a `Lihat detail +` summary. The AI Assistant section is absent.

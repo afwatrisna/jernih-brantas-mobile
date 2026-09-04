@@ -90,3 +90,4 @@
 - [x] Hapus tampilan AI Assistant dari UI sementara, tetapi pertahankan route API, policy, knowledge base, dan fondasi rate limit untuk diaktifkan kembali nanti.
 - [x] Replace the static SVG river map with a client-only Leaflet/OpenStreetMap map using the supplied GeoJSON, station markers, filters, permanent-name toggle, and responsive styling.
 - [x] Apply the new brantas-river.geojson instructions: update the five station names/coordinates and add the requested map legend while preserving filters and sensor-name toggle.
+- [x] Apply the pasted homepage revision: move map above hero, add status-aware hero/stat cards, merge warning/anomaly, simplify actions, and collapse Data Trust while keeping backend/data logic intact.
