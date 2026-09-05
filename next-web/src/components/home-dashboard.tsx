@@ -125,24 +125,26 @@ export default function Home() {
             <NavButton active={section === "settings"} icon="settings" label="Atur" onClick={() => setSection("settings")} />
           </div>
 
-          {section === "monitor" && <section className="monitor-page">
-            <section className="intro monitor-intro"><h1>Monitor</h1><p>Kondisi sungai secara langsung, per titik pantau.</p></section>
-            <div className="monitor-station-chips" aria-label="Pilih stasiun monitor">{stations.map((station) => <button type="button" key={station.id} onClick={() => selectStation(station.id)} className={station.id === activeId ? "selected" : ""}><i style={{ background: insights[station.id].color }} /><span>{station.name}</span></button>)}</div>
-            <div className="mobile-stations">{stations.map((station) => <button key={station.id} onClick={() => selectStation(station.id)} className={station.id === activeId ? "selected" : ""}><b>{station.name}</b><span>{formatNtu(station.ntu)} NTU</span><i style={{ background: insights[station.id].color }} /></button>)}</div>
-            <div className="monitor-explore"><BrantasMap stations={stations} insights={insights} activeId={activeId} filter={mapFilter} onFilter={setMapFilter} onSelect={selectStation} onOpenAnalytics={() => openAnalytics()} /></div>
-            <section className={`hero-card severity-${activeInsight.severity}`}>
-              <div className="hero-heading"><span className="hero-river">SUNGAI BRANTAS · {activeStation.subtitle.toUpperCase()}</span><h2>{activeStation.name}</h2><StatusBadge insight={activeInsight} compact /></div>
-              <span className={`live-status ${simulation ? "live" : "paused"}`}><i />{simulation ? "SIMULASI AKTIF" : "SIMULASI DIJEDA"}</span>
-              <div className="hero-value"><strong key={activeStation.ntu}>{formatNtu(activeStation.ntu)}</strong><span>NTU</span></div>
-              <div className="hero-condition"><div><strong>{activeCondition.title}</strong><span>{activeCondition.detail} {activeClass.label} · Kelas {activeClass.grade}.</span></div></div>
-              <div className="gauge"><div className="gauge-track"><i style={{ height: `${Math.min(100, Math.max(4, activeStation.ntu))}%` }} /></div><span>100</span><span>50</span><span>0</span></div>
+          {section === "monitor" && (
+            <section className="monitor-page">
+              <section className="intro monitor-intro"><h1>Monitor</h1><p>Kondisi sungai secara langsung, per titik pantau.</p></section>
+              <div className="monitor-station-chips" aria-label="Pilih stasiun monitor">{stations.map((station) => <button type="button" key={station.id} onClick={() => selectStation(station.id)} className={station.id === activeId ? "selected" : ""}><i style={{ background: insights[station.id].color }} /><span>{station.name}</span></button>)}</div>
+              <div className="mobile-stations">{stations.map((station) => <button key={station.id} onClick={() => selectStation(station.id)} className={station.id === activeId ? "selected" : ""}><b>{station.name}</b><span>{formatNtu(station.ntu)} NTU</span><i style={{ background: insights[station.id].color }} /></button>)}</div>
+              <div className="monitor-explore"><BrantasMap stations={stations} insights={insights} activeId={activeId} filter={mapFilter} onFilter={setMapFilter} onSelect={selectStation} onOpenAnalytics={() => openAnalytics()} /></div>
+              <section className={`hero-card severity-${activeInsight.severity}`}>
+                <div className="hero-heading"><span className="hero-river">SUNGAI BRANTAS · {activeStation.subtitle.toUpperCase()}</span><h2>{activeStation.name}</h2><StatusBadge insight={activeInsight} compact /></div>
+                <span className={`live-status ${simulation ? "live" : "paused"}`}><i />{simulation ? "SIMULASI AKTIF" : "SIMULASI DIJEDA"}</span>
+                <div className="hero-value"><strong key={activeStation.ntu}>{formatNtu(activeStation.ntu)}</strong><span>NTU</span></div>
+                <div className="hero-condition"><div><strong>{activeCondition.title}</strong><span>{activeCondition.detail} {activeClass.label} · Kelas {activeClass.grade}.</span></div></div>
+                <div className="gauge"><div className="gauge-track"><i style={{ height: `${Math.min(100, Math.max(4, activeStation.ntu))}%` }} /></div><span>100</span><span>50</span><span>0</span></div>
+              </section>
+              <p className="hero-plain-explainer">{NTU_PLAIN_EXPLANATION} Kelas {activeClass.grade}: {WATER_CLASS_PLAIN_LABEL[activeClass.grade]}.</p>
+              <div className="metric-grid"><article><Icon name="water" /><strong>{formatNtu(average)}</strong><span>Rata-rata sungai</span></article><article className={compliant >= 4 ? "positive" : compliant >= 3 ? "attention" : "critical"}><Icon name="check" /><strong>{compliant} / 5</strong><span>Sesuai Kelas II</span></article><article className={activeAlerts > 0 ? "attention" : ""}><Icon name="alert" /><strong>{activeAlerts}</strong><span>Alert aktif</span></article><article><Icon name="database" /><strong>{recordCount}</strong><span>{demoDisplayMode ? "Catatan demo aktif" : hasRemoteReadings ? "Catatan Supabase" : "Catatan demo"}</span></article></div>
+              <section className="monitor-priority" aria-labelledby="monitor-priority-title"><div className="monitor-section-heading"><span>PRIORITAS HARI INI</span><h2 id="monitor-priority-title">Tinjau sebelum mengambil tindakan.</h2><p>Alert dan pola tidak biasa ditampilkan lebih dahulu; keduanya tetap memerlukan verifikasi lapangan.</p></div><AlertPanel stations={stations} insights={insights} onSelect={selectStation} onAnalytics={openAnalytics} /></section>
+              <div className="monitor-action-bar" aria-label="Tindakan monitor"><button type="button" className="monitor-action-primary" onClick={() => setSection("field")}><span><Icon name="field" /> Catat hasil ukur</span><b>→</b></button><button type="button" className="monitor-action-secondary" onClick={() => openAnalytics()}><span><Icon name="chart" /> Lihat analitik</span><b>→</b></button></div>
+              <DataTrust source={activeSource} simulation={simulation} updatedAt={updatedAt} equipment={demoDisplayMode ? "NTU-Logger demo" : latest?.equipment ?? "NTU-Logger demo"} />
             </section>
-            <p className="hero-plain-explainer">{NTU_PLAIN_EXPLANATION} Kelas {activeClass.grade}: {WATER_CLASS_PLAIN_LABEL[activeClass.grade]}.</p>
-            <div className="metric-grid"><article><Icon name="water" /><strong>{formatNtu(average)}</strong><span>Rata-rata sungai</span></article><article className={compliant >= 4 ? "positive" : compliant >= 3 ? "attention" : "critical"}><Icon name="check" /><strong>{compliant} / 5</strong><span>Sesuai Kelas II</span></article><article className={activeAlerts > 0 ? "attention" : ""}><Icon name="alert" /><strong>{activeAlerts}</strong><span>Alert aktif</span></article><article><Icon name="database" /><strong>{recordCount}</strong><span>{demoDisplayMode ? "Catatan demo aktif" : hasRemoteReadings ? "Catatan Supabase" : "Catatan demo"}</span></article></div>
-            <section className="monitor-priority" aria-labelledby="monitor-priority-title"><div className="monitor-section-heading"><span>PRIORITAS HARI INI</span><h2 id="monitor-priority-title">Tinjau sebelum mengambil tindakan.</h2><p>Alert dan pola tidak biasa ditampilkan lebih dahulu; keduanya tetap memerlukan verifikasi lapangan.</p></div><AlertPanel stations={stations} insights={insights} onSelect={selectStation} onAnalytics={openAnalytics} /></section>
-            <div className="monitor-action-bar" aria-label="Tindakan monitor"><button type="button" className="monitor-action-primary" onClick={() => setSection("field")}><span><Icon name="field" /> Catat hasil ukur</span><b>→</b></button><button type="button" className="monitor-action-secondary" onClick={() => openAnalytics()}><span><Icon name="chart" /> Lihat analitik</span><b>→</b></button></div>
-            <DataTrust source={activeSource} simulation={simulation} updatedAt={updatedAt} equipment={demoDisplayMode ? "NTU-Logger demo" : latest?.equipment ?? "NTU-Logger demo"} />
-          </section>}
+          )}
 
           {section === "field" && (
             <section className="field-page">
@@ -178,7 +180,7 @@ export default function Home() {
             <>
               <section className="intro"><h1>Analitik</h1><p>Tren, perbandingan, dan ekspor data stasiun aktif.</p></section>
               <div className="analytics-toolbar">
-                <div className="range-pills">{(["6H", "24H", "7D"] as const).map((r) => <button key={r} type="button" className={timeRange === r ? "selected" : ""} onClick={() => setTimeRange(r)}>{r}</button>)}</div>
+                <div className="range-pills">{(["24H", "7D", "30D", "90D"] as const).map((r) => <button key={r} type="button" className={timeRange === r ? "selected" : ""} onClick={() => setTimeRange(r)}>{r}</button>)}</div>
                 <button type="button" className="export-btn" onClick={exportCsv}>Ekspor CSV</button>
               </div>
               <section className="surface-card"><div className="card-heading"><h2>{activeStation.name}</h2><StatusBadge insight={activeInsight} /></div><TrendChart history={displayRangeHistory} baseline={activeStation.baseline} /><div className="range-stats"><span>Rata-rata {formatNtu(rangeAverage)}</span><span>Min {formatNtu(rangeMin)}</span><span>Max {formatNtu(rangeMax)}</span></div></section>
