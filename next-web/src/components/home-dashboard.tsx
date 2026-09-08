@@ -133,6 +133,8 @@ export default function Home() {
               fieldNtu={d.fieldNtu}
               fieldEquipment={d.fieldEquipment}
               fieldError={d.fieldError}
+              fieldSuccess={d.fieldSuccess}
+              fieldLastReading={d.fieldLastReading}
               fieldAuthEmail={d.fieldAuthEmail}
               fieldAuthMessage={d.fieldAuthMessage}
               fieldAuthSubmitting={d.fieldAuthSubmitting}
