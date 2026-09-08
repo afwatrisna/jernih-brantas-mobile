@@ -60,6 +60,17 @@ export function DataTrust({
           </div>
         </div>
         <p>{trust.note}</p>
+        <p className="trust-scale-note">
+          Nilai yang ditampilkan adalah kekeruhan air (NTU), diukur menggunakan sensor
+          optik lapangan. Skala kategori (jernih/normal/waspada/keruh/ekstrem) disusun
+          berdasarkan referensi umum kualitas air sungai secara internasional (EPA
+          volunteer stream monitoring, standar perikanan air tawar), bukan turunan
+          langsung dari baku mutu air minum WHO/EPA yang jauh lebih ketat karena
+          konteksnya berbeda (air minum vs. air sungai terbuka). NTU berkorelasi dengan
+          padatan tersuspensi (TSS) namun bukan pengukuran yang sama dengan baku mutu
+          resmi PP No. 22 Tahun 2021, yang mengatur TSS dalam satuan mg/L. Skala ini
+          bersifat indikatif untuk pemantauan tren, bukan penilaian kepatuhan hukum resmi.
+        </p>
       </div>
     </details>
   );
