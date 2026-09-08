@@ -29,9 +29,9 @@ export type Reading = {
 };
 
 export const EQUIPMENT = [
-  "NTU-Logger demo",
   "Turbidimeter T-100",
   "Turbidimeter HI-98703",
+  "NTU-Logger demo",
 ] as const;
 
 export const STATIONS: Station[] = [
