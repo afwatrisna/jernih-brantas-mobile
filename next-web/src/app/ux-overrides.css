@@ -24,25 +24,11 @@
     linear-gradient(145deg, #9a3220 0%, #6e2418 50%, #4a1a12 100%);
 }
 
+/* Extreme still uses critical colors + optional outline; no floating EKSTREM text */
 .hero-card.is-extreme {
   box-shadow:
-    0 0 0 2px rgba(255, 200, 180, 0.55),
+    0 0 0 2px rgba(255, 200, 180, 0.45),
     0 14px 24px -20px rgba(18, 60, 53, 0.7);
-}
-
-.hero-card.is-extreme::after {
-  content: "EKSTREM";
-  position: absolute;
-  top: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 220, 200, 0.45);
-  background: rgba(0, 0, 0, 0.28);
-  color: #ffd7c8;
-  font: 700 9px monospace;
-  letter-spacing: 1px;
 }
 
 .alert-station-context {
