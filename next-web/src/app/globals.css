@@ -1,13 +1,21 @@
 @import "tailwindcss";
 
-/* CSS modularization in progress — shell chunks preserve visual parity */
-@import "../styles/shell-1.css";
-@import "../styles/shell-2.css";
-@import "../styles/shell-3.css";
-@import "../styles/shell-4.css";
-@import "../styles/shell-5.css";
-@import "../styles/shell-6.css";
-@import "../styles/shell-7.css";
+/* Phase 1 CSS modularization — numbered pieces (parity with main) */
+@import "../styles/p01.css";
+@import "../styles/p02.css";
+@import "../styles/p03.css";
+@import "../styles/p04.css";
+@import "../styles/p05.css";
+@import "../styles/p06.css";
+@import "../styles/p07.css";
+@import "../styles/p08.css";
+@import "../styles/p09.css";
+@import "../styles/p10.css";
+@import "../styles/p11.css";
+@import "../styles/p12.css";
+@import "../styles/p13.css";
+@import "../styles/p14.css";
+@import "../styles/p15.css";
 @import "../styles/alerts.css";
 @import "../styles/assistant.css";
 @import "../styles/settings.css";
