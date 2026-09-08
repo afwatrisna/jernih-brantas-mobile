@@ -48,11 +48,14 @@ export function useHomeDashboard() {
   const [section, setSection] = useState<Section>("monitor");
   const [simulation, setSimulation] = useState(false);
   const [demoDisplayMode, setDemoDisplayMode] = useState(false);
-  const [sourceByStation, setSourceByStation] = useState<SourceByStation>(() => Object.fromEntries(defaultStations.map((station) => [station.id, "simulation"])) as SourceByStation);
+  const [sourceByStation, setSourceByStation] = useState<SourceByStation>(() =>
+    Object.fromEntries(defaultStations.map((station) => [station.id, "simulation"])) as SourceByStation,
+  );
   const [fieldStation, setFieldStation] = useState("malang");
   const [fieldNtu, setFieldNtu] = useState("");
   const [fieldEquipment, setFieldEquipment] = useState<(typeof EQUIPMENT)[number]>(EQUIPMENT[0]);
   const [fieldError, setFieldError] = useState("");
+  const [fieldSuccess, setFieldSuccess] = useState("");
   const [fieldAuthEmail, setFieldAuthEmail] = useState("");
   const [fieldAuthMessage, setFieldAuthMessage] = useState("");
   const [fieldAuthSubmitting, setFieldAuthSubmitting] = useState(false);
@@ -70,9 +73,8 @@ export function useHomeDashboard() {
       if (grouped[row.station_id]) grouped[row.station_id].push(toReading(row));
     }
     for (const stationId of Object.keys(grouped)) {
-      grouped[stationId] = grouped[stationId].length > 0
-        ? grouped[stationId].slice(-MAX_HISTORY)
-        : fallbackHistory[stationId];
+      grouped[stationId] =
+        grouped[stationId].length > 0 ? grouped[stationId].slice(-MAX_HISTORY) : fallbackHistory[stationId];
     }
     return grouped;
   }, [defaultStations, fallbackHistory, readingsLoading, supabaseReadings]);
@@ -85,10 +87,11 @@ export function useHomeDashboard() {
     return sources;
   }, [supabaseReadings]);
   const stations = useMemo(
-    () => localStations.map((station) => {
-      const latestReading = displaySupabaseReadings ? history[station.id]?.at(-1) : undefined;
-      return latestReading ? { ...station, ntu: latestReading.ntu } : station;
-    }),
+    () =>
+      localStations.map((station) => {
+        const latestReading = displaySupabaseReadings ? history[station.id]?.at(-1) : undefined;
+        return latestReading ? { ...station, ntu: latestReading.ntu } : station;
+      }),
     [displaySupabaseReadings, history, localStations],
   );
 
@@ -127,7 +130,9 @@ export function useHomeDashboard() {
         });
         return next;
       });
-      setSourceByStation(Object.fromEntries(defaultStations.map((station) => [station.id, "simulation"])) as SourceByStation);
+      setSourceByStation(
+        Object.fromEntries(defaultStations.map((station) => [station.id, "simulation"])) as SourceByStation,
+      );
     }, 4_000);
     return () => window.clearInterval(timer);
   }, [defaultStations, simulation]);
@@ -138,14 +143,24 @@ export function useHomeDashboard() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  const insights = useMemo(() => Object.fromEntries(stations.map((station) => [station.id, getStationInsight(station, history[station.id] ?? [])])) as Record<string, StationInsight>, [history, stations]);
+  const insights = useMemo(
+    () =>
+      Object.fromEntries(
+        stations.map((station) => [station.id, getStationInsight(station, history[station.id] ?? [])]),
+      ) as Record<string, StationInsight>,
+    [history, stations],
+  );
   const activeStation = stations.find((station) => station.id === activeId) ?? stations[0];
   const activeHistory = history[activeStation.id] ?? [];
-  const activeRangeHistory = activeHistory.filter((reading) => reading.timestamp >= rangeAnchor - RANGE_MS[timeRange]);
+  const activeRangeHistory = activeHistory.filter(
+    (reading) => reading.timestamp >= rangeAnchor - RANGE_MS[timeRange],
+  );
   const displayRangeHistory = activeRangeHistory.length >= 2 ? activeRangeHistory : activeHistory.slice(-2);
   const latest = activeHistory[activeHistory.length - 1];
   const updatedAt = latest?.timestamp ?? 0;
-  const activeSource = demoDisplayMode ? "simulation" : remoteSourceByStation[activeStation.id] ?? sourceByStation[activeStation.id] ?? "simulation";
+  const activeSource = demoDisplayMode
+    ? "simulation"
+    : remoteSourceByStation[activeStation.id] ?? sourceByStation[activeStation.id] ?? "simulation";
   const average = stations.reduce((sum, station) => sum + station.ntu, 0) / stations.length;
   const compliant = stations.filter((station) => getSeverity(station.ntu) === "normal").length;
   const activeClass = classifyNtu(activeStation.ntu);
@@ -153,12 +168,28 @@ export function useHomeDashboard() {
   const activeCondition = getConditionCopy(activeInsight);
   const activeAlerts = stations.filter((station) => insights[station.id].alertState === "active").length;
   const selectedFieldStation = stations.find((station) => station.id === fieldStation) ?? activeStation;
+  const fieldLastReading = (() => {
+    const latestReading = history[fieldStation]?.at(-1);
+    if (!latestReading) return null;
+    return {
+      ntu: latestReading.ntu,
+      timestamp: latestReading.timestamp,
+      source: latestReading.source,
+    };
+  })();
   const fieldValue = Number.parseFloat(fieldNtu.replace(",", "."));
   const fieldClass = Number.isFinite(fieldValue) ? classifyNtu(fieldValue) : null;
-  const { access: fieldAccess, loading: fieldAccessLoading, issue: fieldAccessIssue, requestMagicLink, signOut: signOutFieldMode } = useFieldModeAccess();
+  const {
+    access: fieldAccess,
+    loading: fieldAccessLoading,
+    issue: fieldAccessIssue,
+    requestMagicLink,
+    signOut: signOutFieldMode,
+  } = useFieldModeAccess();
   const canWriteFieldMode = Boolean(
-    fieldAccess
-      && (fieldAccess.role === "admin" || (fieldAccess.role === "field_operator" && fieldAccess.stationIds.includes(fieldStation))),
+    fieldAccess &&
+      (fieldAccess.role === "admin" ||
+        (fieldAccess.role === "field_operator" && fieldAccess.stationIds.includes(fieldStation))),
   );
   const rangeValues = displayRangeHistory.map((reading) => reading.ntu);
   const rangeAverage = rangeValues.reduce((sum, value) => sum + value, 0) / Math.max(1, rangeValues.length);
@@ -181,7 +212,9 @@ export function useHomeDashboard() {
     setFieldAuthMessage("");
     try {
       await requestMagicLink(fieldAuthEmail);
-      setFieldAuthMessage("Tautan masuk telah dikirim. Buka email tersebut, lalu kembali ke halaman Catat Hasil Ukur.");
+      setFieldAuthMessage(
+        "Tautan masuk telah dikirim. Buka email tersebut, lalu kembali ke halaman Catat Hasil Ukur.",
+      );
     } catch (error) {
       setFieldAuthMessage(error instanceof Error ? error.message : "Tautan masuk tidak dapat dikirim.");
     } finally {
@@ -191,7 +224,9 @@ export function useHomeDashboard() {
 
   async function saveMeasurement(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setFieldSuccess("");
     if (!fieldAccess) {
+      setFieldSuccess("");
       setFieldError("Masuk sebagai petugas yang ditugaskan sebelum menyimpan pengukuran.");
       return;
     }
@@ -211,13 +246,23 @@ export function useHomeDashboard() {
         equipment: fieldEquipment,
       });
       await refetch();
-      setLocalStations((current) => current.map((station) => station.id === fieldStation ? { ...station, ntu: Math.round(fieldValue * 10) / 10 } : station));
+      setLocalStations((current) =>
+        current.map((station) =>
+          station.id === fieldStation ? { ...station, ntu: Math.round(fieldValue * 10) / 10 } : station,
+        ),
+      );
       setSourceByStation((current) => ({ ...current, [fieldStation]: "manual" }));
       setSimulation(false);
       setActiveId(fieldStation);
       setFieldNtu("");
       setFieldError("");
-      setToast(nextSeverity === "high" || nextSeverity === "critical" ? `Pengukuran lapangan disimpan. Alert ${SEVERITY_META[nextSeverity].label} aktif untuk ${selectedFieldStation.name}.` : `Pengukuran lapangan ${selectedFieldStation.name} berhasil disimpan ke Supabase.`);
+      setFieldSuccess(`Tersimpan ✓ ${selectedFieldStation.name} · ${fieldValue.toFixed(1)} NTU`);
+      setToast(
+        nextSeverity === "high" || nextSeverity === "critical"
+          ? `Pengukuran tersimpan. Status ${SEVERITY_META[nextSeverity].label} untuk ${selectedFieldStation.name}.`
+          : `Pengukuran ${selectedFieldStation.name} berhasil dicatat.`,
+      );
+      window.setTimeout(() => setFieldSuccess(""), 4000);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Gagal menyimpan pengukuran.";
       setFieldError(message);
@@ -251,7 +296,10 @@ export function useHomeDashboard() {
       reading.equipment,
       getSeverity(reading.ntu, activeStation.baseline),
     ]);
-    const csv = ["timestamp,station,ntu,source,equipment,status", ...rows.map((row) => row.map((value) => `\"${String(value).replaceAll("\"", "\"\"")}\"`).join(","))].join("\n");
+    const csv = [
+      "timestamp,station,ntu,source,equipment,status",
+      ...rows.map((row) => row.map((value) => `\"${String(value).replaceAll("\"", "\"\"")}\"`).join(",")),
+    ].join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const link = document.createElement("a");
     link.href = url;
@@ -262,7 +310,9 @@ export function useHomeDashboard() {
   }
 
   function resetDemo() {
-    setSourceByStation(Object.fromEntries(defaultStations.map((station) => [station.id, "simulation"])) as SourceByStation);
+    setSourceByStation(
+      Object.fromEntries(defaultStations.map((station) => [station.id, "simulation"])) as SourceByStation,
+    );
     setActiveId("malang");
     setFieldStation("malang");
     window.localStorage.removeItem(STORAGE_KEY);
@@ -302,11 +352,13 @@ export function useHomeDashboard() {
     fieldEquipment,
     setFieldEquipment,
     fieldError,
+    fieldSuccess,
     fieldAuthEmail,
     setFieldAuthEmail,
     fieldAuthMessage,
     fieldAuthSubmitting,
     selectedFieldStation,
+    fieldLastReading,
     fieldValue,
     fieldClass,
     fieldAccess,
