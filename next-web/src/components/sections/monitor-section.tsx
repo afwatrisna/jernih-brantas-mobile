@@ -136,8 +136,10 @@ export function MonitorSection({
           <span className="hero-river">
             SUNGAI BRANTAS · {activeStation.subtitle.toUpperCase()}
           </span>
-          <h2>{activeStation.name}</h2>
-          <StatusBadge insight={activeInsight} compact />
+          <div className="hero-title-row">
+            <h2>{activeStation.name}</h2>
+            <StatusBadge insight={activeInsight} compact />
+          </div>
         </div>
         <span className={`live-status ${simulation ? "live" : "paused"}`}>
           <i />
@@ -145,7 +147,7 @@ export function MonitorSection({
         </span>
         <div className="hero-value">
           <strong key={activeStation.ntu}>{formatNtu(activeStation.ntu)}</strong>
-          <span>NTU</span>
+          <span className="hero-unit">NTU</span>
         </div>
         <div className="hero-condition">
           <div>
