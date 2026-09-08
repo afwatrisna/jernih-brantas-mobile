@@ -82,3 +82,105 @@
 .brantas-marker-dot.is-extreme {
   box-shadow: 0 0 0 3px rgba(139, 58, 31, 0.35);
 }
+
+/* Hero: badge beside station name, NTU block clear of badge */
+.hero-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: calc(100% - 120px);
+}
+
+.hero-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.hero-title-row h2 {
+  margin: 0;
+}
+
+.hero-title-row .status-badge {
+  margin-top: 0;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 253, 248, 0.22);
+  background: rgba(255, 253, 248, 0.14);
+  color: #eef6f1;
+}
+
+.hero-title-row .status-badge.severity-warning {
+  background: rgba(245, 236, 208, 0.22);
+  color: #f5ecd0;
+}
+
+.hero-title-row .status-badge.severity-high {
+  background: rgba(246, 226, 214, 0.22);
+  color: #f6e2d6;
+}
+
+.hero-title-row .status-badge.severity-critical {
+  background: rgba(240, 217, 208, 0.22);
+  color: #f0d9d0;
+}
+
+.hero-value {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  top: auto;
+  bottom: 78px;
+  left: 27px;
+}
+
+.hero-value strong {
+  line-height: 0.95;
+  letter-spacing: -1.5px;
+}
+
+.hero-value .hero-unit {
+  position: relative;
+  top: -4px;
+  color: #b7c8c0;
+  font: 700 12px/1 monospace;
+  letter-spacing: 0.6px;
+}
+
+@media (max-width: 900px) {
+  .hero-heading {
+    max-width: calc(100% - 24px);
+  }
+
+  .hero-value {
+    position: relative;
+    top: auto;
+    bottom: auto;
+    left: auto;
+    margin: 18px 0 10px;
+  }
+
+  .hero-value strong {
+    font-size: 48px;
+  }
+
+  .hero-condition {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    margin-top: 4px;
+  }
+
+  .hero-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 18px;
+  }
+
+  .hero-card .gauge {
+    display: none;
+  }
+}
