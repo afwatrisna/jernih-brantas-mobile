@@ -1,15 +1,13 @@
 @import "tailwindcss";
 
-/* Jernih Brantas — modular styles (order matters for cascade) */
-@import "../styles/tokens.css";
-@import "../styles/base.css";
-@import "../styles/layout.css";
-@import "../styles/hero.css";
-@import "../styles/monitor.css";
-@import "../styles/map.css";
+/* CSS modularization in progress — shell chunks preserve visual parity */
+@import "../styles/shell-1.css";
+@import "../styles/shell-2.css";
+@import "../styles/shell-3.css";
+@import "../styles/shell-4.css";
+@import "../styles/shell-5.css";
+@import "../styles/shell-6.css";
+@import "../styles/shell-7.css";
 @import "../styles/alerts.css";
-@import "../styles/field.css";
-@import "../styles/analytics.css";
-@import "../styles/settings.css";
 @import "../styles/assistant.css";
-@import "../styles/responsive.css";
+@import "../styles/settings.css";
