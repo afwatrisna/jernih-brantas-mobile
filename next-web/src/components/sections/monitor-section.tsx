@@ -127,13 +127,19 @@ export function MonitorSection({
           onOpenAnalytics={() => onOpenAnalytics()}
         />
       </div>
-      <section className={`hero-card severity-${activeInsight.severity}`}>
+      <section
+        className={`hero-card severity-${activeInsight.severity}${
+          activeInsight.label.includes("Ekstrem") ? " is-extreme" : ""
+        }`}
+      >
         <div className="hero-heading">
           <span className="hero-river">
             SUNGAI BRANTAS · {activeStation.subtitle.toUpperCase()}
           </span>
-          <h2>{activeStation.name}</h2>
-          <StatusBadge insight={activeInsight} compact />
+          <div className="hero-title-row">
+            <h2>{activeStation.name}</h2>
+            <StatusBadge insight={activeInsight} compact />
+          </div>
         </div>
         <span className={`live-status ${simulation ? "live" : "paused"}`}>
           <i />
@@ -141,7 +147,7 @@ export function MonitorSection({
         </span>
         <div className="hero-value">
           <strong key={activeStation.ntu}>{formatNtu(activeStation.ntu)}</strong>
-          <span>NTU</span>
+          <span className="hero-unit">NTU</span>
         </div>
         <div className="hero-condition">
           <div>
@@ -181,7 +187,11 @@ export function MonitorSection({
         >
           <Icon name="check" />
           <strong>{compliant} / 5</strong>
-          <span>Sesuai Kelas II</span>
+          <span>
+            stasiun sesuai
+            <br />
+            rentang normal
+          </span>
         </article>
         <article className={activeAlerts > 0 ? "attention" : ""}>
           <Icon name="alert" />
@@ -212,6 +222,7 @@ export function MonitorSection({
         <AlertPanel
           stations={stations}
           insights={insights}
+          activeId={activeId}
           onSelect={onSelectStation}
           onAnalytics={onOpenAnalytics}
         />

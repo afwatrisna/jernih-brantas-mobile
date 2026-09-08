@@ -115,17 +115,17 @@ export function SettingsSection({
             <div>
               <h2>Aturan status</h2>
               <p>
-                Alert memakai nilai NTU dan penyimpangan terhadap baseline;
-                hasilnya tetap memerlukan verifikasi.
+                Status memakai skala kekeruhan sungai (NTU). Hasil tetap
+                memerlukan verifikasi lapangan.
               </p>
             </div>
           </div>
           {(
             [
-              ["Normal", "dalam pola", "#2D6A5C"],
-              ["Warning", ">25 NTU / deviasi", "#A27719"],
-              ["High", "≥50 NTU", "#C4622D"],
-              ["Critical", "≥75 NTU", "#8B3A1F"],
+              ["Normal", "0–15 NTU", "#2D6A5C"],
+              ["Waspada", "15–30 NTU", "#A27719"],
+              ["Keruh", "30–60 NTU", "#C4622D"],
+              ["Kritis", "60+ (Ekstrem >150)", "#8B3A1F"],
             ] as const
           ).map(([label, range, color]) => (
             <div key={label} className="threshold-row">

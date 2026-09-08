@@ -1,7 +1,7 @@
 export type ReadingSource = "simulation" | "manual" | "sensor";
 
 export type WaterClass = {
-  label: "Sangat Jernih" | "Jernih" | "Keruh" | "Sangat Keruh";
+  label: string;
   grade: "I" | "II" | "III" | "IV";
   color: string;
   softColor: string;
@@ -35,11 +35,11 @@ export const EQUIPMENT = [
 ] as const;
 
 export const STATIONS: Station[] = [
-  { id: "malang", name: "Malang Hulu", subtitle: "Bendungan Sengguruh", baseline: 9, x: 13, y: 17, lat: -7.9966, lng: 112.6374 },
-  { id: "kediri", name: "Kediri", subtitle: "Jembatan Mrican", baseline: 16, x: 29, y: 38, lat: -7.8219, lng: 112.0095 },
-  { id: "jombang", name: "Jombang", subtitle: "Ploso", baseline: 21, x: 47, y: 54, lat: -7.4902, lng: 112.1927 },
-  { id: "mojokerto", name: "Mojokerto", subtitle: "Bendung Lengkong", baseline: 27, x: 62, y: 68, lat: -7.4602, lng: 112.4309 },
-  { id: "porong", name: "Porong / Sidoarjo Hilir", subtitle: "Kali Porong", baseline: 34, x: 81, y: 82, lat: -7.5337, lng: 112.8701 },
+  { id: "malang", name: "Malang Hulu", subtitle: "Bendungan Sengguruh", baseline: 4, x: 13, y: 17, lat: -7.9966, lng: 112.6374 },
+  { id: "kediri", name: "Kediri", subtitle: "Jembatan Mrican", baseline: 11, x: 29, y: 38, lat: -7.8219, lng: 112.0095 },
+  { id: "jombang", name: "Jombang", subtitle: "Ploso", baseline: 22, x: 47, y: 54, lat: -7.4902, lng: 112.1927 },
+  { id: "mojokerto", name: "Mojokerto", subtitle: "Bendung Lengkong", baseline: 42, x: 62, y: 68, lat: -7.4602, lng: 112.4309 },
+  { id: "porong", name: "Porong / Sidoarjo Hilir", subtitle: "Kali Porong", baseline: 165, x: 81, y: 82, lat: -7.5337, lng: 112.8701 },
 ];
 
 export const initialStationStates = (): StationState[] =>

@@ -147,7 +147,7 @@ export function useHomeDashboard() {
   const updatedAt = latest?.timestamp ?? 0;
   const activeSource = demoDisplayMode ? "simulation" : remoteSourceByStation[activeStation.id] ?? sourceByStation[activeStation.id] ?? "simulation";
   const average = stations.reduce((sum, station) => sum + station.ntu, 0) / stations.length;
-  const compliant = stations.filter((station) => station.ntu <= 25).length;
+  const compliant = stations.filter((station) => getSeverity(station.ntu) === "normal").length;
   const activeClass = classifyNtu(activeStation.ntu);
   const activeInsight = insights[activeStation.id];
   const activeCondition = getConditionCopy(activeInsight);
@@ -270,10 +270,8 @@ export function useHomeDashboard() {
   }
 
   return {
-    // navigation
     section,
     setSection,
-    // stations & map
     stations,
     insights,
     activeId,
@@ -282,7 +280,6 @@ export function useHomeDashboard() {
     mapFilter,
     setMapFilter,
     openAnalytics,
-    // monitor metrics
     simulation,
     setSimulation,
     demoDisplayMode,
@@ -298,7 +295,6 @@ export function useHomeDashboard() {
     activeSource,
     updatedAt,
     latest,
-    // field mode
     fieldStation,
     setFieldStation,
     fieldNtu,
@@ -320,7 +316,6 @@ export function useHomeDashboard() {
     requestFieldModeAccess,
     signOutFieldMode,
     saveMeasurement,
-    // analytics
     timeRange,
     setTimeRange,
     comparisonIds,
@@ -334,9 +329,7 @@ export function useHomeDashboard() {
     history,
     rangeAnchor,
     exportCsv,
-    // settings
     resetDemo,
-    // chrome
     toast,
   };
 }

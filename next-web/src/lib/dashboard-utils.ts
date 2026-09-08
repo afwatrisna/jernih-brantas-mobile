@@ -22,10 +22,96 @@ export const SEVERITY_META: Record<
   Pick<StationInsight, "label" | "color" | "softColor">
 > = {
   normal: { label: "Normal", color: "#2D6A5C", softColor: "#DCEBE5" },
-  warning: { label: "Warning", color: "#A27719", softColor: "#F5ECD0" },
-  high: { label: "High", color: "#C4622D", softColor: "#F6E2D6" },
-  critical: { label: "Critical", color: "#8B3A1F", softColor: "#F0D9D0" },
+  warning: { label: "Waspada", color: "#A27719", softColor: "#F5ECD0" },
+  high: { label: "Keruh", color: "#C4622D", softColor: "#F6E2D6" },
+  critical: { label: "Kritis", color: "#8B3A1F", softColor: "#F0D9D0" },
 };
+
+/**
+ * Skala kekeruhan sungai (NTU) — satu sumber kebenaran.
+ * Bukan baku mutu air minum; indikatif untuk pemantauan tren.
+ * Kalibrasi ulang di sini saja setelah sensor riil tersedia.
+ */
+export type NtuCategoryId =
+  | "sangat_jernih"
+  | "jernih"
+  | "waspada"
+  | "keruh"
+  | "sangat_keruh"
+  | "ekstrem";
+
+export type NtuCategory = {
+  id: NtuCategoryId;
+  label: string;
+  severity: Severity;
+  extreme: boolean;
+  rangeLabel: string;
+};
+
+/** Upper bounds for each tier (next tier starts above this value). */
+export const NTU_CATEGORY_BOUNDS = {
+  sangat_jernih: 5,
+  jernih: 15,
+  waspada: 30,
+  keruh: 60,
+  sangat_keruh: 150,
+} as const;
+
+export function getNtuCategory(ntu: number): NtuCategory {
+  const value = Number.isFinite(ntu) ? ntu : 0;
+  if (value > NTU_CATEGORY_BOUNDS.sangat_keruh) {
+    return {
+      id: "ekstrem",
+      label: "Ekstrem",
+      severity: "critical",
+      extreme: true,
+      rangeLabel: ">150 NTU",
+    };
+  }
+  if (value > NTU_CATEGORY_BOUNDS.keruh) {
+    return {
+      id: "sangat_keruh",
+      label: "Sangat Keruh",
+      severity: "critical",
+      extreme: false,
+      rangeLabel: "60–150 NTU",
+    };
+  }
+  if (value > NTU_CATEGORY_BOUNDS.waspada) {
+    return {
+      id: "keruh",
+      label: "Keruh",
+      severity: "high",
+      extreme: false,
+      rangeLabel: "30–60 NTU",
+    };
+  }
+  if (value > NTU_CATEGORY_BOUNDS.jernih) {
+    return {
+      id: "waspada",
+      label: "Waspada",
+      severity: "warning",
+      extreme: false,
+      rangeLabel: "15–30 NTU",
+    };
+  }
+  if (value > NTU_CATEGORY_BOUNDS.sangat_jernih) {
+    return {
+      id: "jernih",
+      label: "Jernih / Normal",
+      severity: "normal",
+      extreme: false,
+      rangeLabel: "5–15 NTU",
+    };
+  }
+  return {
+    id: "sangat_jernih",
+    label: "Sangat Jernih",
+    severity: "normal",
+    extreme: false,
+    rangeLabel: "0–5 NTU",
+  };
+}
 
 export function makeReading(
   ntu: number,
@@ -108,12 +194,8 @@ export function formatPercent(value: number) {
   return `${rounded >= 0 ? "+" : ""}${rounded}%`;
 }
 
-export function getSeverity(ntu: number, baseline: number): Severity {
-  const deviation = ((ntu - baseline) / Math.max(1, baseline)) * 100;
-  if (ntu >= 75 || deviation >= 190) return "critical";
-  if (ntu >= 50 || deviation >= 100) return "high";
-  if (ntu > 25 || deviation >= 60) return "warning";
-  return "normal";
+export function getSeverity(ntu: number, _baseline?: number): Severity {
+  return getNtuCategory(ntu).severity;
 }
 
 export function getStationInsight(
@@ -151,36 +233,44 @@ export function getStationInsight(
       : hadAlert
         ? "resolved"
         : "none";
+  const category = getNtuCategory(station.ntu);
+  const label =
+    category.extreme ? `${SEVERITY_META[severity].label} · Ekstrem` : SEVERITY_META[severity].label;
   return {
     severity,
-    ...SEVERITY_META[severity],
+    label,
+    color: SEVERITY_META[severity].color,
+    softColor: SEVERITY_META[severity].softColor,
     deviation,
-    anomaly,
+    anomaly: category.extreme ? anomaly ?? "Kekeruhan ekstrem" : anomaly,
     alertState,
   };
 }
 
 export function getConditionCopy(insight: StationInsight) {
   if (insight.severity === "critical") {
+    const extreme = insight.label.includes("Ekstrem") || insight.anomaly === "Kekeruhan ekstrem";
     return {
-      title: "Kondisi: sangat perlu ditinjau.",
-      detail: "Nilai berada jauh di atas baseline dan perlu verifikasi lapangan.",
+      title: extreme ? "Kondisi: kekeruhan ekstrem." : "Kondisi: sangat keruh.",
+      detail: extreme
+        ? "Nilai di atas 150 NTU — prioritaskan verifikasi lapangan."
+        : "Nilai 60–150 NTU — perlu verifikasi lapangan.",
     };
   }
   if (insight.severity === "high") {
     return {
-      title: "Kondisi: perlu ditinjau.",
-      detail: "Nilai melewati ambang perhatian dan perlu verifikasi lapangan.",
+      title: "Kondisi: keruh.",
+      detail: "Nilai 30–60 NTU — pantau dan verifikasi bila berlanjut.",
     };
   }
   if (insight.severity === "warning") {
     return {
-      title: "Kondisi: perlu diperhatikan.",
-      detail: "Air agak lebih keruh dari biasanya.",
+      title: "Kondisi: waspada.",
+      detail: "Nilai 15–30 NTU — air lebih keruh dari rentang normal pemantauan.",
     };
   }
   return {
-    title: "Kondisi: dalam pola normal.",
-    detail: "Nilai masih berada di sekitar baseline stasiun.",
+    title: "Kondisi: jernih / normal.",
+    detail: "Nilai dalam rentang 0–15 NTU untuk skala pemantauan sungai ini.",
   };
 }
