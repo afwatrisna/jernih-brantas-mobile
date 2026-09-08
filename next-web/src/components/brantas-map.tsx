@@ -61,14 +61,16 @@ function MarkerIcon({
   severity,
   selected,
   anomaly,
+  extreme = false,
 }: {
   severity: BrantasMapInsight["severity"];
   selected: boolean;
   anomaly: boolean;
+  extreme?: boolean;
 }) {
   return L.divIcon({
     className: "brantas-marker-icon",
-    html: `<span class="brantas-marker-dot severity-${severity}${selected ? " selected" : ""}${anomaly ? " has-anomaly" : ""}"></span>`,
+    html: `<span class="brantas-marker-dot severity-${severity}${selected ? " selected" : ""}${anomaly ? " has-anomaly" : ""}${extreme ? " is-extreme" : ""}"></span>`,
     iconSize: selected ? [28, 28] : [22, 22],
     iconAnchor: selected ? [14, 14] : [11, 11],
     popupAnchor: [0, -12],
@@ -147,7 +149,7 @@ export function BrantasMap({
         </div>
         <label className="map-label-toggle">
           <input type="checkbox" checked={showLabels} onChange={(event) => setShowLabels(event.target.checked)} />
-          <span>Tampilkan nama wilayah sensor</span>
+          <span>Tampilkan nama stasiun aktif di peta</span>
         </label>
       </div>
 
@@ -175,10 +177,10 @@ export function BrantasMap({
               <Marker
                 key={station.id}
                 position={[station.lat, station.lng]}
-                icon={MarkerIcon({ severity: insight.severity, selected: isSelected, anomaly: Boolean(insight.anomaly) })}
+                icon={MarkerIcon({ severity: insight.severity, selected: isSelected, anomaly: Boolean(insight.anomaly), extreme: insight.label.includes("Ekstrem") })}
                 eventHandlers={{ click: () => onSelect(station.id) }}
               >
-                {showLabels && <Tooltip permanent direction="top" offset={[0, -10]}>{station.name}</Tooltip>}
+                {showLabels && station.id === activeId && <Tooltip permanent direction="top" offset={[0, -12]}>{station.name}</Tooltip>}
                 <Popup>
                   <div className="leaflet-popup-content">
                     <strong>{station.name}</strong>
@@ -209,9 +211,9 @@ export function BrantasMap({
             <span>STASIUN DIPILIH</span>
             <strong>{selected.name}</strong>
           </div>
-          <span className={`status-badge compact severity-${selectedInsight.severity}`}><i />{selectedInsight.label}</span>
+          <span className={`status-badge compact severity-${selectedInsight.severity}${selectedInsight.label.includes("Ekstrem") ? " is-extreme" : ""}`}><i />{selectedInsight.label}</span>
         </div>
-        <p>{formatNtu(selected.ntu)} NTU · {Math.round(selectedInsight.deviation) >= 0 ? "+" : ""}{Math.round(selectedInsight.deviation)}% vs baseline{selectedInsight.alertState === "active" ? " · 1 alert aktif" : ""}{selectedInsight.anomaly ? ` · ${selectedInsight.anomaly}` : ""}</p>
+        <p className="map-selection-meta">{selected.subtitle}{selectedInsight.anomaly ? ` · ${selectedInsight.anomaly}` : ""}</p>
         <button type="button" onClick={onOpenAnalytics}>Lihat analitik →</button>
       </div>
     </section>
