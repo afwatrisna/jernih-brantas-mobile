@@ -68,11 +68,14 @@ function MarkerIcon({
   anomaly: boolean;
   extreme?: boolean;
 }) {
+  const sonar = selected
+    ? `<i class="marker-sonar" aria-hidden="true"></i><i class="marker-sonar delay" aria-hidden="true"></i>`
+    : "";
   return L.divIcon({
     className: "brantas-marker-icon",
-    html: `<span class="brantas-marker-dot severity-${severity}${selected ? " selected" : ""}${anomaly ? " has-anomaly" : ""}${extreme ? " is-extreme" : ""}"></span>`,
-    iconSize: selected ? [28, 28] : [22, 22],
-    iconAnchor: selected ? [14, 14] : [11, 11],
+    html: `<span class="brantas-marker-dot severity-${severity}${selected ? " selected" : ""}${anomaly ? " has-anomaly" : ""}${extreme ? " is-extreme" : ""}">${sonar}</span>`,
+    iconSize: selected ? [32, 32] : [22, 22],
+    iconAnchor: selected ? [16, 16] : [11, 11],
     popupAnchor: [0, -12],
   });
 }
@@ -175,7 +178,7 @@ export function BrantasMap({
             const isSelected = station.id === activeId;
             return (
               <Marker
-                key={station.id}
+                key={`${station.id}-${isSelected ? "on" : "off"}`}
                 position={[station.lat, station.lng]}
                 icon={MarkerIcon({ severity: insight.severity, selected: isSelected, anomaly: Boolean(insight.anomaly), extreme: insight.label.includes("Ekstrem") })}
                 eventHandlers={{ click: () => onSelect(station.id) }}
@@ -205,7 +208,7 @@ export function BrantasMap({
         <span className="map-legend-item"><i className="map-legend-line" aria-hidden="true" />Aliran sungai</span>
       </div>
 
-      <div className="map-selection">
+      <div key={activeId} className="map-selection map-selection-enter">
         <div className="map-tooltip-heading">
           <div>
             <span>STASIUN DIPILIH</span>
