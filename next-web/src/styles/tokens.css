@@ -1,0 +1,14 @@
+/* Design tokens — CSS variables */
+
+:root {
+  --ink: #17302b;
+  --deep: #123c35;
+  --river: #2d6a5c;
+  --river-2: #4c8b7a;
+  --mint: #e7f2ec;
+  --sand: #f5f1e8;
+  --paper: #fffdf8;
+  --line: #ded8c8;
+  --muted: #68756d;
+  --orange: #c4622d;
+}
