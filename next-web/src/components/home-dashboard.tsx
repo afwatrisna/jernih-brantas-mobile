@@ -113,6 +113,7 @@ export default function Home() {
               activeAlerts={d.activeAlerts}
               recordCount={d.recordCount}
               hasRemoteReadings={d.hasRemoteReadings}
+              isInitialLoading={d.isInitialLoading}
               activeClass={d.activeClass}
               activeInsight={d.activeInsight}
               activeCondition={d.activeCondition}
