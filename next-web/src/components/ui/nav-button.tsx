@@ -6,9 +6,12 @@ type NavButtonProps = {
   icon: IconName;
   label: string;
   onClick: () => void;
+  badge?: number | string;
 };
 
-export function NavButton({ active, icon, label, onClick }: NavButtonProps) {
+export function NavButton({ active, icon, label, onClick, badge }: NavButtonProps) {
+  const showBadge = badge !== undefined && badge !== null && badge !== 0 && badge !== "0";
+
   return (
     <button
       type="button"
@@ -17,7 +20,8 @@ export function NavButton({ active, icon, label, onClick }: NavButtonProps) {
       aria-current={active ? "page" : undefined}
     >
       <Icon name={icon} />
-      <span>{label}</span>
+      <span className="nav-button-label">{label}</span>
+      {showBadge ? <em className="nav-button-badge">{badge}</em> : null}
     </button>
   );
 }

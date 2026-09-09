@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { NavButton } from "@/components/ui/nav-button";
 import { SettingsSection } from "@/components/sections/settings-section";
 import { MonitorSection } from "@/components/sections/monitor-section";
@@ -9,6 +10,7 @@ import { useHomeDashboard } from "@/hooks/useHomeDashboard";
 
 export default function Home() {
   const d = useHomeDashboard();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <main className="app-shell">
@@ -29,45 +31,65 @@ export default function Home() {
         </span>
       </header>
 
-      <div className="workspace">
-        <aside className="sidebar">
-          <button
-            className="sidebar-brand"
-            onClick={() => d.setSection("monitor")}
-            aria-label="Beranda Jernih"
-          >
-            <span className="brand-mark">◒</span>
-            <span>
-              <b>Jernih</b>
-              <small>BRANTAS · NEXT</small>
-            </span>
-          </button>
-          <span className="sidebar-label">RUANG KERJA</span>
-          <div className="sidebar-nav">
-            <NavButton
-              active={d.section === "monitor"}
-              icon="grid"
-              label="Monitor"
+      <div className={`workspace${sidebarCollapsed ? " sidebar-collapsed" : ""}`}>
+        <aside className={`sidebar${sidebarCollapsed ? " is-collapsed" : ""}`}>
+          <div className="sidebar-top">
+            <button
+              className="sidebar-brand"
               onClick={() => d.setSection("monitor")}
-            />
-            <NavButton
-              active={d.section === "field"}
-              icon="field"
-              label="Catat Hasil Ukur"
-              onClick={() => d.setSection("field")}
-            />
-            <NavButton
-              active={d.section === "analytics"}
-              icon="chart"
-              label="Analitik"
-              onClick={() => d.setSection("analytics")}
-            />
-            <NavButton
-              active={d.section === "settings"}
-              icon="settings"
-              label="Pengaturan"
-              onClick={() => d.setSection("settings")}
-            />
+              aria-label="Beranda Jernih"
+            >
+              <span className="brand-mark" aria-hidden="true">
+                ◒
+              </span>
+              <span className="sidebar-brand-text">
+                <b>Jernih</b> <strong>NEXT</strong>
+              </span>
+            </button>
+            <span className="sidebar-label">RUANG KERJA</span>
+            <div className="sidebar-nav">
+              <NavButton
+                active={d.section === "monitor"}
+                icon="grid"
+                label="Monitor"
+                badge={d.activeAlerts > 0 ? d.activeAlerts : undefined}
+                onClick={() => d.setSection("monitor")}
+              />
+              <NavButton
+                active={d.section === "field"}
+                icon="field"
+                label="Catat Hasil Ukur"
+                onClick={() => d.setSection("field")}
+              />
+              <NavButton
+                active={d.section === "analytics"}
+                icon="chart"
+                label="Analitik"
+                onClick={() => d.setSection("analytics")}
+              />
+              <NavButton
+                active={d.section === "settings"}
+                icon="settings"
+                label="Pengaturan"
+                onClick={() => d.setSection("settings")}
+              />
+            </div>
+          </div>
+          <div className="sidebar-footer">
+            <button
+              type="button"
+              className="sidebar-collapse"
+              onClick={() => setSidebarCollapsed((value) => !value)}
+              aria-label={sidebarCollapsed ? "Perluas navigasi" : "Ciutkan navigasi"}
+              aria-expanded={!sidebarCollapsed}
+            >
+              <span className="sidebar-collapse-icon" aria-hidden="true">
+                {sidebarCollapsed ? "›" : "‹"}
+              </span>
+              <span className="sidebar-collapse-label">
+                {sidebarCollapsed ? "Expand" : "Collapse"}
+              </span>
+            </button>
           </div>
         </aside>
 
