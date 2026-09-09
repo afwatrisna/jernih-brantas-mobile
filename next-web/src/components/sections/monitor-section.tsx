@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useEffect, useRef, useState } from "react";
 import {
   NTU_PLAIN_EXPLANATION,
   WATER_CLASS_PLAIN_LABEL,
@@ -99,6 +100,56 @@ export function MonitorSection({
   onOpenField,
   isInitialLoading = false,
 }: MonitorSectionProps) {
+  const [displayNtu, setDisplayNtu] = useState(activeStation.ntu);
+  const [gaugePct, setGaugePct] = useState(
+    Math.min(100, Math.max(4, activeStation.ntu)),
+  );
+  const [gaugeReset, setGaugeReset] = useState(false);
+  const prevIdRef = useRef(activeStation.id);
+  const displayRef = useRef(activeStation.ntu);
+
+  useEffect(() => {
+    const target = activeStation.ntu;
+    const stationChanged = prevIdRef.current !== activeStation.id;
+    prevIdRef.current = activeStation.id;
+
+    const from = stationChanged ? 0 : displayRef.current;
+    const duration = stationChanged ? 520 : 380;
+    const start = performance.now();
+    let raf = 0;
+
+    if (stationChanged) {
+      setGaugeReset(true);
+      setDisplayNtu(0);
+      setGaugePct(0);
+    }
+
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      const value = from + (target - from) * eased;
+      displayRef.current = value;
+      setDisplayNtu(value);
+      setGaugePct(Math.min(100, Math.max(4, value)));
+      if (t < 1) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        displayRef.current = target;
+        setDisplayNtu(target);
+        setGaugePct(Math.min(100, Math.max(4, target)));
+        setGaugeReset(false);
+      }
+    };
+
+    // Double rAF so reset height paints before fill transition
+    raf = requestAnimationFrame(() => {
+      if (stationChanged) setGaugeReset(false);
+      raf = requestAnimationFrame(tick);
+    });
+
+    return () => cancelAnimationFrame(raf);
+  }, [activeStation.id, activeStation.ntu]);
+
   return (
     <section className="monitor-page">
       <section className="intro monitor-intro">
@@ -164,8 +215,8 @@ export function MonitorSection({
             {simulation ? "SIMULASI AKTIF" : "SIMULASI DIJEDA"}
           </span>
           <div className="hero-value">
-            <strong key={`${activeStation.id}-${activeStation.ntu}`}>
-              {formatNtu(activeStation.ntu)}
+            <strong key={activeStation.id}>
+              {formatNtu(displayNtu)}
             </strong>
             <span className="hero-unit">NTU</span>
           </div>
@@ -180,8 +231,9 @@ export function MonitorSection({
           <div className="gauge">
             <div className="gauge-track">
               <i
+                className={gaugeReset ? "gauge-fill-reset" : undefined}
                 style={{
-                  height: `${Math.min(100, Math.max(4, activeStation.ntu))}%`,
+                  height: `${gaugePct}%`,
                 }}
               />
             </div>
