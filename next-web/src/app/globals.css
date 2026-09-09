@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Phase 1 CSS modularization — numbered pieces (parity with main) */
+/* Modular CSS — sequential pieces preserve cascade parity with monolith */
 @import "../styles/p01.css";
 @import "../styles/p02.css";
 @import "../styles/p03.css";
