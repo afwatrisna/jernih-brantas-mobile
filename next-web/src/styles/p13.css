@@ -1,0 +1,38 @@
+/* p13 */
+@media (max-width:900px) {
+  .monitor-station-chips { display:none; }
+  .monitor-station-select { display:block; width:100%; }
+  .monitor-priority .insight-grid { grid-template-columns:1fr; }
+  .monitor-explore { gap:12px; }
+  .brantas-map-wrap { min-height:280px; }
+  .leaflet-container { min-height:280px; }
+}
+@media (max-width:600px) {
+  .monitor-station-select { font-size:13px; min-height:44px; }
+  .brantas-map-wrap { min-height:240px; border-radius:14px; }
+  .leaflet-container { min-height:240px; }
+  .map-legend { font-size:9px; gap:6px; }
+  .map-legend span { gap:4px; }
+}
+.field-page { display:grid; gap:16px; }
+.field-intro h1 { margin:0 0 6px; font-size:28px; letter-spacing:-0.03em; }
+.field-intro p { margin:0; color:var(--muted); font-size:13px; line-height:1.5; }
+.field-layout { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(280px,0.9fr); gap:16px; align-items:start; }
+.field-main, .field-side { display:grid; gap:14px; }
+.field-station { padding:16px; border:1px solid var(--line); border-radius:16px; background:var(--paper); }
+.field-station h3 { margin:0 0 8px; font-size:15px; }
+.field-station p { margin:0; color:var(--muted); font-size:12px; }
+.field-form { padding:18px; border:1px solid var(--line); border-radius:18px; background:#f7fbf8; }
+.field-form h3 { margin:0 0 12px; font-size:16px; }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.form-grid label { display:grid; gap:6px; font-size:12px; color:var(--muted); }
+.form-grid input, .form-grid select, .form-grid textarea { min-height:44px; padding:10px 12px; border:1px solid #c5d8cc; border-radius:12px; background:#fff; color:var(--ink); font:inherit; }
+.form-grid textarea { min-height:88px; resize:vertical; }
+.form-grid .full { grid-column:1 / -1; }
+.field-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
+.field-actions button { min-height:46px; padding:0 16px; border-radius:12px; font-weight:600; }
+.field-actions .primary { color:#fff; background:var(--deep); border:0; }
+.field-actions .ghost { color:var(--river); background:transparent; border:1px solid #b6cfbf; }
+.measurement-review { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border:1px solid #cfe1d7; border-radius:14px; background:#edf6f0; }
+.measurement-review p { margin:0; max-width:70%; color:var(--muted); font-size:12px; }
+.measurement-review strong { display:block; margin-bottom:4px; color:var(--ink); font-size:14px; }
