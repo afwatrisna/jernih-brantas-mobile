@@ -9,3 +9,69 @@
 .settings-layout .surface-card {
   min-height: 0;
 }
+
+/* Mobile / tablet: stack, jangan paksa kolom 280px */
+@media (max-width: 900px) {
+  .settings-layout {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .settings-card .setting-row {
+    align-items: flex-start;
+    min-height: 0;
+    padding: 14px;
+  }
+
+  .settings-card .setting-row > div {
+    min-width: 0;
+  }
+
+  .settings-card .setting-row p {
+    max-width: none;
+  }
+
+  .settings-card .setting-divider {
+    margin-left: 0;
+  }
+
+  .settings-layout .thresholds {
+    padding: 16px;
+  }
+
+  .threshold-row {
+    min-height: 36px;
+  }
+
+  .reset-button {
+    margin-top: 12px;
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .settings-card .setting-row {
+    gap: 10px;
+    padding: 13px 12px;
+  }
+
+  .settings-card .setting-icon {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+  }
+
+  .settings-card .setting-row h2 {
+    font-size: 13px;
+  }
+
+  .settings-card .setting-row p {
+    font-size: 11px;
+    line-height: 15px;
+  }
+
+  .settings-card .switch {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+}
