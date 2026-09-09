@@ -58,7 +58,21 @@ export type MonitorSectionProps = {
   onMapFilter: (filter: MapFilter) => void;
   onOpenAnalytics: (id?: string) => void;
   onOpenField: () => void;
+  /** True only on first Supabase readings fetch — not realtime refetches */
+  isInitialLoading?: boolean;
 };
+
+function HeroCardSkeleton() {
+  return (
+    <section className="hero-card hero-card-skeleton" aria-hidden="true" aria-busy="true">
+      <div className="skeleton-block skeleton-eyebrow" />
+      <div className="skeleton-block skeleton-title" />
+      <div className="skeleton-block skeleton-value" />
+      <div className="skeleton-block skeleton-condition" />
+      <div className="skeleton-block skeleton-gauge" />
+    </section>
+  );
+}
 
 export function MonitorSection({
   stations,
@@ -83,6 +97,7 @@ export function MonitorSection({
   onMapFilter,
   onOpenAnalytics,
   onOpenField,
+  isInitialLoading = false,
 }: MonitorSectionProps) {
   return (
     <section className="monitor-page">
@@ -127,49 +142,55 @@ export function MonitorSection({
           onOpenAnalytics={() => onOpenAnalytics()}
         />
       </div>
-      <section
-        className={`hero-card severity-${activeInsight.severity}${
-          activeInsight.label.includes("Ekstrem") ? " is-extreme" : ""
-        }`}
-      >
-        <div className="hero-heading">
-          <span className="hero-river">
-            SUNGAI BRANTAS · {activeStation.subtitle.toUpperCase()}
-          </span>
-          <div className="hero-title-row">
-            <h2>{activeStation.name}</h2>
-            <StatusBadge insight={activeInsight} compact />
-          </div>
-        </div>
-        <span className={`live-status ${simulation ? "live" : "paused"}`}>
-          <i />
-          {simulation ? "SIMULASI AKTIF" : "SIMULASI DIJEDA"}
-        </span>
-        <div className="hero-value">
-          <strong key={activeStation.ntu}>{formatNtu(activeStation.ntu)}</strong>
-          <span className="hero-unit">NTU</span>
-        </div>
-        <div className="hero-condition">
-          <div>
-            <strong>{activeCondition.title}</strong>
-            <span>
-              {activeCondition.detail} {activeClass.label} · Kelas {activeClass.grade}.
+      {isInitialLoading ? (
+        <HeroCardSkeleton />
+      ) : (
+        <section
+          className={`hero-card severity-${activeInsight.severity}${
+            activeInsight.label.includes("Ekstrem") ? " is-extreme" : ""
+          }`}
+        >
+          <div className="hero-heading">
+            <span className="hero-river">
+              SUNGAI BRANTAS · {activeStation.subtitle.toUpperCase()}
             </span>
+            <div className="hero-title-row">
+              <h2>{activeStation.name}</h2>
+              <StatusBadge insight={activeInsight} compact />
+            </div>
           </div>
-        </div>
-        <div className="gauge">
-          <div className="gauge-track">
-            <i
-              style={{
-                height: `${Math.min(100, Math.max(4, activeStation.ntu))}%`,
-              }}
-            />
+          <span className={`live-status ${simulation ? "live" : "paused"}`}>
+            <i />
+            {simulation ? "SIMULASI AKTIF" : "SIMULASI DIJEDA"}
+          </span>
+          <div className="hero-value">
+            <strong key={`${activeStation.id}-${activeStation.ntu}`}>
+              {formatNtu(activeStation.ntu)}
+            </strong>
+            <span className="hero-unit">NTU</span>
           </div>
-          <span>100</span>
-          <span>50</span>
-          <span>0</span>
-        </div>
-      </section>
+          <div className="hero-condition">
+            <div>
+              <strong>{activeCondition.title}</strong>
+              <span>
+                {activeCondition.detail} {activeClass.label} · Kelas {activeClass.grade}.
+              </span>
+            </div>
+          </div>
+          <div className="gauge">
+            <div className="gauge-track">
+              <i
+                style={{
+                  height: `${Math.min(100, Math.max(4, activeStation.ntu))}%`,
+                }}
+              />
+            </div>
+            <span>100</span>
+            <span>50</span>
+            <span>0</span>
+          </div>
+        </section>
+      )}
       <p className="hero-plain-explainer">
         {NTU_PLAIN_EXPLANATION} Kelas {activeClass.grade}:{" "}
         {WATER_CLASS_PLAIN_LABEL[activeClass.grade as keyof typeof WATER_CLASS_PLAIN_LABEL]}.
