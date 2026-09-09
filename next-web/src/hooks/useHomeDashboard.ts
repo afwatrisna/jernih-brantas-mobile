@@ -44,6 +44,8 @@ export function useHomeDashboard() {
   const defaultStations = useMemo(() => initialStationStates(), []);
   const [localStations, setLocalStations] = useState<StationState[]>(defaultStations);
   const { readings: supabaseReadings, loading: readingsLoading, refetch } = useSupabaseReadings();
+  /** Becomes true after the first readings fetch settles; realtime updates must not re-show skeletons. */
+  const [hasCompletedInitialFetch, setHasCompletedInitialFetch] = useState(false);
   const [activeId, setActiveId] = useState("malang");
   const [section, setSection] = useState<Section>("monitor");
   const [simulation, setSimulation] = useState(false);
@@ -142,6 +144,12 @@ export function useHomeDashboard() {
     const timer = window.setTimeout(() => setToast(""), 3200);
     return () => window.clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    if (!readingsLoading) {
+      setHasCompletedInitialFetch(true);
+    }
+  }, [readingsLoading]);
 
   const insights = useMemo(
     () =>
@@ -339,6 +347,7 @@ export function useHomeDashboard() {
     activeAlerts,
     recordCount,
     hasRemoteReadings,
+    isInitialLoading: readingsLoading && !hasCompletedInitialFetch,
     activeClass,
     activeInsight,
     activeCondition,
