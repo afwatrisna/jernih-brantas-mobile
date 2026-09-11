@@ -1,6 +1,7 @@
 "use client";
 
 import { NavButton } from "@/components/ui/nav-button";
+import { BrandMark } from "@/components/ui/brand-mark";
 import { SettingsSection } from "@/components/sections/settings-section";
 import { MonitorSection } from "@/components/sections/monitor-section";
 import { FieldSection } from "@/components/sections/field-section";
@@ -18,14 +19,13 @@ export default function Home() {
           onClick={() => d.setSection("monitor")}
           aria-label="Beranda Jernih"
         >
-          <span className="brand-mark">◒</span>
+          <BrandMark />
           <span>
             <b>Jernih</b>
-            <small>BRANTAS · NEXT</small>
           </span>
         </button>
         <span className="demo-badge">
-          <i /> NEXT.JS DEMO
+          <i /> DEMO
         </span>
       </header>
 
@@ -36,10 +36,9 @@ export default function Home() {
             onClick={() => d.setSection("monitor")}
             aria-label="Beranda Jernih"
           >
-            <span className="brand-mark">◒</span>
-            <span>
+            <BrandMark />
+            <span className="sidebar-brand-text">
               <b>Jernih</b>
-              <small>BRANTAS · NEXT</small>
             </span>
           </button>
           <span className="sidebar-label">RUANG KERJA</span>

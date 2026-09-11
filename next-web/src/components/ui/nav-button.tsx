@@ -17,7 +17,7 @@ export function NavButton({ active, icon, label, onClick }: NavButtonProps) {
       aria-current={active ? "page" : undefined}
     >
       <Icon name={icon} />
-      <span>{label}</span>
+      <span className="nav-button-label">{label}</span>
     </button>
   );
 }
