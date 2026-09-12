@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { NavButton } from "@/components/ui/nav-button";
+import { BrandMark } from "@/components/ui/brand-mark";
 import { SettingsSection } from "@/components/sections/settings-section";
 import { MonitorSection } from "@/components/sections/monitor-section";
 import { FieldSection } from "@/components/sections/field-section";
@@ -9,6 +11,15 @@ import { useHomeDashboard } from "@/hooks/useHomeDashboard";
 
 export default function Home() {
   const d = useHomeDashboard();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const handleBrandClick = () => {
+    if (sidebarCollapsed) {
+      setSidebarCollapsed(false);
+      return;
+    }
+    d.setSection("monitor");
+  };
 
   return (
     <main className="app-shell">
@@ -18,56 +29,73 @@ export default function Home() {
           onClick={() => d.setSection("monitor")}
           aria-label="Beranda Jernih"
         >
-          <span className="brand-mark">◒</span>
+          <BrandMark />
           <span>
             <b>Jernih</b>
-            <small>BRANTAS · NEXT</small>
           </span>
         </button>
         <span className="demo-badge">
-          <i /> NEXT.JS DEMO
+          <i /> DEMO
         </span>
       </header>
 
-      <div className="workspace">
-        <aside className="sidebar">
-          <button
-            className="sidebar-brand"
-            onClick={() => d.setSection("monitor")}
-            aria-label="Beranda Jernih"
-          >
-            <span className="brand-mark">◒</span>
-            <span>
-              <b>Jernih</b>
-              <small>BRANTAS · NEXT</small>
-            </span>
-          </button>
-          <span className="sidebar-label">RUANG KERJA</span>
-          <div className="sidebar-nav">
-            <NavButton
-              active={d.section === "monitor"}
-              icon="grid"
-              label="Monitor"
-              onClick={() => d.setSection("monitor")}
-            />
-            <NavButton
-              active={d.section === "field"}
-              icon="field"
-              label="Catat Hasil Ukur"
-              onClick={() => d.setSection("field")}
-            />
-            <NavButton
-              active={d.section === "analytics"}
-              icon="chart"
-              label="Analitik"
-              onClick={() => d.setSection("analytics")}
-            />
-            <NavButton
-              active={d.section === "settings"}
-              icon="settings"
-              label="Pengaturan"
-              onClick={() => d.setSection("settings")}
-            />
+      <div className={`workspace${sidebarCollapsed ? " sidebar-collapsed" : ""}`}>
+        <aside className={`sidebar${sidebarCollapsed ? " is-collapsed" : ""}`}>
+          <div className="sidebar-top">
+            <div className="sidebar-brand-row">
+              <button
+                className="sidebar-brand"
+                onClick={handleBrandClick}
+                aria-label={
+                  sidebarCollapsed
+                    ? "Perluas navigasi"
+                    : "Beranda Jernih"
+                }
+              >
+                <BrandMark />
+                <span className="sidebar-brand-text">
+                  <b>Jernih</b>
+                </span>
+              </button>
+              {!sidebarCollapsed ? (
+                <button
+                  type="button"
+                  className="sidebar-collapse-toggle"
+                  onClick={() => setSidebarCollapsed(true)}
+                  aria-label="Ciutkan navigasi"
+                  title="Ciutkan"
+                >
+                  <span aria-hidden="true">‹</span>
+                </button>
+              ) : null}
+            </div>
+            <span className="sidebar-label">RUANG KERJA</span>
+            <div className="sidebar-nav">
+              <NavButton
+                active={d.section === "monitor"}
+                icon="grid"
+                label="Monitor"
+                onClick={() => d.setSection("monitor")}
+              />
+              <NavButton
+                active={d.section === "field"}
+                icon="field"
+                label="Catat Hasil Ukur"
+                onClick={() => d.setSection("field")}
+              />
+              <NavButton
+                active={d.section === "analytics"}
+                icon="chart"
+                label="Analitik"
+                onClick={() => d.setSection("analytics")}
+              />
+              <NavButton
+                active={d.section === "settings"}
+                icon="settings"
+                label="Pengaturan"
+                onClick={() => d.setSection("settings")}
+              />
+            </div>
           </div>
         </aside>
 
