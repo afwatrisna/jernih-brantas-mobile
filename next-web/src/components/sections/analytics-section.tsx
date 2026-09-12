@@ -66,7 +66,7 @@ export function AnalyticsSection({
   activeInsight,
   timeRange,
   comparisonIds,
-  comparisonStations,
+  comparisonStations: _comparisonStations,
   displayRangeHistory,
   rangeAverage,
   rangeMin,
@@ -78,9 +78,7 @@ export function AnalyticsSection({
   onExportCsv,
 }: AnalyticsSectionProps) {
   const latest = displayRangeHistory[displayRangeHistory.length - 1];
-  const latestLabel = latest
-    ? formatDateTime(latest.timestamp)
-    : formatDateTime(activeStation.updatedAt);
+  const latestLabel = latest ? formatDateTime(latest.timestamp) : "—";
 
   return (
     <div className="analytics-page">
@@ -151,7 +149,7 @@ export function AnalyticsSection({
           <em>
             {formatPercent(
               activeStation.baseline
-                ? (rangeMin - activeStation.baseline) / activeStation.baseline
+                ? ((rangeMin - activeStation.baseline) / activeStation.baseline) * 100
                 : 0,
             )}{" "}
             vs baseline
@@ -163,7 +161,7 @@ export function AnalyticsSection({
           <em>
             {formatPercent(
               activeStation.baseline
-                ? (rangeMax - activeStation.baseline) / activeStation.baseline
+                ? ((rangeMax - activeStation.baseline) / activeStation.baseline) * 100
                 : 0,
             )}{" "}
             vs baseline
