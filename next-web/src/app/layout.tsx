@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./ux-overrides.css";
+import "./analytics-export.css";
 import "leaflet/dist/leaflet.css";
 
 export const metadata: Metadata = {
