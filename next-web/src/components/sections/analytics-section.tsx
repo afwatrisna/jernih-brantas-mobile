@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   classifyNtu,
   formatNtu,
@@ -79,6 +80,17 @@ export function AnalyticsSection({
 }: AnalyticsSectionProps) {
   const latest = displayRangeHistory[displayRangeHistory.length - 1];
   const latestLabel = latest ? formatDateTime(latest.timestamp) : "—";
+  const [exportState, setExportState] = useState<"idle" | "loading" | "done">("idle");
+
+  const handleExport = () => {
+    if (exportState === "loading") return;
+    setExportState("loading");
+    window.setTimeout(() => {
+      onExportCsv();
+      setExportState("done");
+      window.setTimeout(() => setExportState("idle"), 1800);
+    }, 420);
+  };
 
   return (
     <div className="analytics-page">
@@ -100,9 +112,29 @@ export function AnalyticsSection({
               </button>
             ))}
           </div>
-          <button type="button" className="analytics-export-btn" onClick={onExportCsv}>
-            <span aria-hidden="true">↓</span>
-            Ekspor CSV
+          <button
+            type="button"
+            className={`analytics-export-btn${exportState === "loading" ? " is-loading" : ""}${exportState === "done" ? " is-done" : ""}`}
+            onClick={handleExport}
+            disabled={exportState === "loading"}
+            aria-live="polite"
+          >
+            {exportState === "loading" ? (
+              <>
+                <span className="analytics-export-spinner" aria-hidden="true" />
+                Menyiapkan…
+              </>
+            ) : exportState === "done" ? (
+              <>
+                <span className="analytics-export-check" aria-hidden="true">✓</span>
+                Tersimpan
+              </>
+            ) : (
+              <>
+                <span aria-hidden="true">↓</span>
+                Ekspor CSV
+              </>
+            )}
           </button>
         </div>
       </header>
