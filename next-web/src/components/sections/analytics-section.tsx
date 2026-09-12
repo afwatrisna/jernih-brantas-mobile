@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   classifyNtu,
   formatNtu,
@@ -15,7 +15,7 @@ import {
   formatPercent,
   getSeverity,
 } from "@/lib/dashboard-utils";
-import { TrendChart } from "@/components/trend-chart";
+import { TrendChart, type ChartSeries } from "@/components/trend-chart";
 
 export type AnalyticsSectionProps = {
   stations: StationState[];
@@ -45,6 +45,9 @@ const TIME_RANGE_LABELS: Record<TimeRange, string> = {
 
 const TIME_RANGES = ["24H", "7D", "30D", "90D"] as const;
 
+/** Distinct colors for overlay series (not primary green). */
+const OVERLAY_COLORS = ["#2f6fed", "#c4622d", "#7c3aed", "#0d9488"];
+
 function stationAverageInRange(
   station: StationState,
   history: History,
@@ -60,6 +63,19 @@ function stationAverageInRange(
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
+function stationHistoryInRange(
+  stationId: string,
+  history: History,
+  rangeAnchor: number,
+  timeRange: TimeRange,
+): Reading[] {
+  const all = history[stationId] ?? [];
+  const filtered = all.filter(
+    (reading) => reading.timestamp >= rangeAnchor - RANGE_MS[timeRange],
+  );
+  return filtered.length >= 2 ? filtered : all.slice(-Math.min(2, all.length));
+}
+
 export function AnalyticsSection({
   stations,
   insights,
@@ -67,7 +83,7 @@ export function AnalyticsSection({
   activeInsight,
   timeRange,
   comparisonIds,
-  comparisonStations: _comparisonStations,
+  comparisonStations,
   displayRangeHistory,
   rangeAverage,
   rangeMin,
@@ -81,6 +97,28 @@ export function AnalyticsSection({
   const latest = displayRangeHistory[displayRangeHistory.length - 1];
   const latestLabel = latest ? formatDateTime(latest.timestamp) : "—";
   const [exportState, setExportState] = useState<"idle" | "loading" | "done">("idle");
+
+  const overlaySeries = useMemo<ChartSeries[]>(() => {
+    const others = comparisonStations.filter(
+      (station) => station.id !== activeStation.id,
+    );
+    return others.map((station, index) => ({
+      id: station.id,
+      name: station.name,
+      color: OVERLAY_COLORS[index % OVERLAY_COLORS.length],
+      readings: stationHistoryInRange(
+        station.id,
+        history,
+        rangeAnchor,
+        timeRange,
+      ),
+    }));
+  }, [activeStation.id, comparisonStations, history, rangeAnchor, timeRange]);
+
+  const chartTitle =
+    overlaySeries.length > 0
+      ? `Tren NTU · ${activeStation.name} + ${overlaySeries.length} stasiun`
+      : `Tren NTU · ${activeStation.name}`;
 
   const handleExport = () => {
     if (exportState === "loading") return;
@@ -208,12 +246,18 @@ export function AnalyticsSection({
 
       <section className="analytics-card" aria-label="Grafik tren">
         <div className="analytics-card-head">
-          <h2>Tren NTU · {activeStation.name}</h2>
+          <h2>{chartTitle}</h2>
           <div className="analytics-legend">
             <span>
               <i className="is-val" />
-              Pembacaan
+              {activeStation.name}
             </span>
+            {overlaySeries.map((s) => (
+              <span key={s.id}>
+                <i className="is-overlay" style={{ background: s.color }} />
+                {s.name}
+              </span>
+            ))}
             <span>
               <i className="is-base" />
               Baseline
@@ -224,10 +268,15 @@ export function AnalyticsSection({
             </span>
           </div>
         </div>
-        <TrendChart readings={displayRangeHistory} baseline={activeStation.baseline} />
+        <TrendChart
+          readings={displayRangeHistory}
+          baseline={activeStation.baseline}
+          series={overlaySeries}
+        />
         <p className="analytics-footnote">
-          Anomali ditandai jika deviasi signifikan dari baseline atau pola pembacaan
-          stasiun.
+          {overlaySeries.length > 0
+            ? "Garis berwarna adalah stasiun yang dipilih di Perbandingan. Klik kartu di bawah untuk menambah/mengurangi overlay (maks. 3)."
+            : "Anomali ditandai jika deviasi signifikan dari baseline atau pola pembacaan stasiun. Pilih stasiun di bawah untuk menampilkan overlay."}
         </p>
       </section>
 
@@ -242,6 +291,17 @@ export function AnalyticsSection({
             rangeAnchor,
             timeRange,
           );
+          const overlayColor =
+            station.id === activeStation.id
+              ? "#1f6b54"
+              : OVERLAY_COLORS[
+                  Math.max(
+                    0,
+                    comparisonStations
+                      .filter((s) => s.id !== activeStation.id)
+                      .findIndex((s) => s.id === station.id),
+                  ) % OVERLAY_COLORS.length
+                ];
           return (
             <button
               type="button"
@@ -259,7 +319,16 @@ export function AnalyticsSection({
               >
                 {insight.label}
               </span>
-              <span className="analytics-compare-name">{station.name}</span>
+              <span className="analytics-compare-name">
+                {selected && (
+                  <i
+                    className="analytics-compare-swatch"
+                    style={{ background: overlayColor }}
+                    aria-hidden="true"
+                  />
+                )}
+                {station.name}
+              </span>
               <span className="analytics-compare-ntu">
                 {formatNtu(station.ntu)}
                 <small>NTU</small>
@@ -276,13 +345,14 @@ export function AnalyticsSection({
         })}
       </div>
       <p className="analytics-footnote">
-        Pilih stasiun untuk menandai perbandingan (maksimal sesuai logika yang ada).
+        Pilih 1–3 stasiun. Stasiun aktif (garis hijau tebal) + stasiun terpilih
+        lainnya di-overlay pada grafik di atas.
       </p>
 
       <section className="analytics-card analytics-history-card" aria-label="Riwayat">
         <div className="analytics-card-head">
           <h2>Riwayat pengukuran</h2>
-          <span className="analytics-card-meta">Terbaru di atas</span>
+          <span className="analytics-card-meta">Terbaru di atas · stasiun aktif</span>
         </div>
         <div className="analytics-history-list">
           {[...displayRangeHistory]
