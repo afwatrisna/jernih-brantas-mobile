@@ -1,0 +1,68 @@
+/* Export CSV micro-interaction */
+.analytics-export-btn {
+  position: relative;
+  overflow: hidden;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.12s ease,
+    box-shadow 0.18s ease;
+}
+
+.analytics-export-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.analytics-export-btn.is-loading {
+  color: var(--muted);
+  border-color: #d9d2c4;
+  background: #f3efe6;
+  cursor: wait;
+}
+
+.analytics-export-btn.is-done {
+  color: #1f5c4a;
+  border-color: #b7d8c8;
+  background: #e4f2eb;
+  box-shadow: 0 0 0 3px rgba(31, 107, 84, 0.12);
+}
+
+.analytics-export-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #cfc7b5;
+  border-top-color: #1f6b54;
+  animation: analyticsExportSpin 0.7s linear infinite;
+}
+
+.analytics-export-check {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #1f6b54;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  animation: analyticsExportPop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes analyticsExportSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes analyticsExportPop {
+  0% { transform: scale(0.4); opacity: 0; }
+  70% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .analytics-export-spinner { animation: none; }
+  .analytics-export-check { animation: none; }
+  .analytics-export-btn:active:not(:disabled) { transform: none; }
+}
