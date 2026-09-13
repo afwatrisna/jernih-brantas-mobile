@@ -44,9 +44,8 @@ const TIME_RANGE_LABELS: Record<TimeRange, string> = {
 };
 
 const TIME_RANGES = ["24H", "7D", "30D", "90D"] as const;
-
-/** Distinct colors for overlay series (not primary green). */
 const OVERLAY_COLORS = ["#2f6fed", "#c4622d", "#7c3aed", "#0d9488"];
+const PRIMARY_COLOR = "#1f6b54";
 
 function stationAverageInRange(
   station: StationState,
@@ -97,6 +96,8 @@ export function AnalyticsSection({
   const latest = displayRangeHistory[displayRangeHistory.length - 1];
   const latestLabel = latest ? formatDateTime(latest.timestamp) : "—";
   const [exportState, setExportState] = useState<"idle" | "loading" | "done">("idle");
+  const [chartMode, setChartMode] = useState<"line" | "bar">("line");
+  const [hiddenIds, setHiddenIds] = useState<string[]>([]);
 
   const overlaySeries = useMemo<ChartSeries[]>(() => {
     const others = comparisonStations.filter(
@@ -115,10 +116,82 @@ export function AnalyticsSection({
     }));
   }, [activeStation.id, comparisonStations, history, rangeAnchor, timeRange]);
 
-  const chartTitle =
-    overlaySeries.length > 0
-      ? `Tren NTU · ${activeStation.name} + ${overlaySeries.length} stasiun`
-      : `Tren NTU · ${activeStation.name}`;
+  type Chip = {
+    id: string;
+    name: string;
+    color: string;
+    ntu: number;
+    avg: number;
+  };
+
+  const chips = useMemo<Chip[]>(() => {
+    const primary: Chip = {
+      id: activeStation.id,
+      name: activeStation.name,
+      color: PRIMARY_COLOR,
+      ntu: activeStation.ntu,
+      avg: stationAverageInRange(
+        activeStation,
+        history,
+        rangeAnchor,
+        timeRange,
+      ),
+    };
+    const others = overlaySeries.map((s) => {
+      const station =
+        comparisonStations.find((c) => c.id === s.id) ??
+        stations.find((c) => c.id === s.id);
+      return {
+        id: s.id,
+        name: s.name,
+        color: s.color,
+        ntu: station?.ntu ?? s.readings[s.readings.length - 1]?.ntu ?? 0,
+        avg: station
+          ? stationAverageInRange(station, history, rangeAnchor, timeRange)
+          : 0,
+      };
+    });
+    return [primary, ...others];
+  }, [
+    activeStation,
+    comparisonStations,
+    history,
+    overlaySeries,
+    rangeAnchor,
+    stations,
+    timeRange,
+  ]);
+
+  const insightsBlock = useMemo(() => {
+    if (chips.length === 0) return null;
+    const sorted = [...chips].sort((a, b) => a.avg - b.avg);
+    const clearest = sorted[0];
+    const murkiest = sorted[sorted.length - 1];
+    const gap = murkiest.avg - clearest.avg;
+    const overThreshold = chips.filter((c) => c.avg > 25);
+    return {
+      clearest,
+      murkiest,
+      gap,
+      overThreshold,
+    };
+  }, [chips]);
+
+  const barRows = useMemo(() => {
+    const rows = chips.map((c) => ({ ...c }));
+    const maxAvg = Math.max(...rows.map((r) => r.avg), 1);
+    return rows
+      .sort((a, b) => b.avg - a.avg)
+      .map((r) => ({ ...r, pct: (r.avg / maxAvg) * 100 }));
+  }, [chips]);
+
+  function toggleHidden(id: string) {
+    setHiddenIds((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id],
+    );
+  }
 
   const handleExport = () => {
     if (exportState === "loading") return;
@@ -164,7 +237,9 @@ export function AnalyticsSection({
               </>
             ) : exportState === "done" ? (
               <>
-                <span className="analytics-export-check" aria-hidden="true">✓</span>
+                <span className="analytics-export-check" aria-hidden="true">
+                  ✓
+                </span>
                 Tersimpan
               </>
             ) : (
@@ -219,7 +294,8 @@ export function AnalyticsSection({
           <em>
             {formatPercent(
               activeStation.baseline
-                ? ((rangeMin - activeStation.baseline) / activeStation.baseline) * 100
+                ? ((rangeMin - activeStation.baseline) / activeStation.baseline) *
+                    100
                 : 0,
             )}{" "}
             vs baseline
@@ -231,7 +307,8 @@ export function AnalyticsSection({
           <em>
             {formatPercent(
               activeStation.baseline
-                ? ((rangeMax - activeStation.baseline) / activeStation.baseline) * 100
+                ? ((rangeMax - activeStation.baseline) / activeStation.baseline) *
+                    100
                 : 0,
             )}{" "}
             vs baseline
@@ -246,37 +323,171 @@ export function AnalyticsSection({
 
       <section className="analytics-card" aria-label="Grafik tren">
         <div className="analytics-card-head">
-          <h2>{chartTitle}</h2>
-          <div className="analytics-legend">
-            <span>
-              <i className="is-val" />
-              {activeStation.name}
-            </span>
-            {overlaySeries.map((s) => (
-              <span key={s.id}>
-                <i className="is-overlay" style={{ background: s.color }} />
-                {s.name}
-              </span>
-            ))}
-            <span>
-              <i className="is-base" />
-              Baseline
-            </span>
-            <span>
-              <i className="is-anom" />
-              Anomali
-            </span>
+          <div>
+            <h2>Tren kekeruhan (NTU)</h2>
+            <p className="analytics-card-sub">
+              {TIME_RANGE_LABELS[timeRange]} · hover titik untuk detail · klik chip
+              untuk tampil/sembunyi
+            </p>
+          </div>
+          <div className="analytics-segment" role="group" aria-label="Mode grafik">
+            <button
+              type="button"
+              className={chartMode === "line" ? "is-on" : undefined}
+              onClick={() => setChartMode("line")}
+            >
+              Garis tren
+            </button>
+            <button
+              type="button"
+              className={chartMode === "bar" ? "is-on" : undefined}
+              onClick={() => setChartMode("bar")}
+            >
+              Perbandingan
+            </button>
           </div>
         </div>
-        <TrendChart
-          readings={displayRangeHistory}
-          baseline={activeStation.baseline}
-          series={overlaySeries}
-        />
+
+        <div className="analytics-series-chips">
+          {chips.map((chip) => {
+            const on = !hiddenIds.includes(chip.id);
+            return (
+              <button
+                type="button"
+                key={chip.id}
+                className={`analytics-series-chip${on ? " is-on" : " is-off"}`}
+                style={{ ["--chip-c" as string]: chip.color }}
+                onClick={() => toggleHidden(chip.id)}
+                aria-pressed={on}
+              >
+                <i className="analytics-series-dot" aria-hidden="true" />
+                <span className="analytics-series-name">{chip.name}</span>
+                <strong>{formatNtu(chip.ntu)}</strong>
+                <small>NTU</small>
+              </button>
+            );
+          })}
+        </div>
+
+        {chartMode === "line" ? (
+          <>
+            <TrendChart
+              readings={displayRangeHistory}
+              baseline={activeStation.baseline}
+              series={overlaySeries}
+              hiddenIds={hiddenIds}
+              primaryId={activeStation.id}
+              primaryName={activeStation.name}
+              primaryColor={PRIMARY_COLOR}
+            />
+            {insightsBlock && (
+              <div className="analytics-insight-row">
+                <article>
+                  <label>Paling jernih</label>
+                  <strong>{insightsBlock.clearest.name}</strong>
+                  <em className="is-good">
+                    Rata-rata {formatNtu(insightsBlock.clearest.avg)} NTU
+                    {insightsBlock.clearest.avg <= 25
+                      ? " · di bawah ambang"
+                      : ""}
+                  </em>
+                </article>
+                <article>
+                  <label>Perlu perhatian</label>
+                  <strong>{insightsBlock.murkiest.name}</strong>
+                  <em
+                    className={
+                      insightsBlock.murkiest.avg > 25 ? "is-warn" : undefined
+                    }
+                  >
+                    Rata-rata {formatNtu(insightsBlock.murkiest.avg)} NTU
+                    {insightsBlock.murkiest.avg > 25
+                      ? " · di atas ambang 25"
+                      : " · masih di bawah ambang"}
+                  </em>
+                </article>
+                <article>
+                  <label>Selisih terbesar</label>
+                  <strong>
+                    {insightsBlock.murkiest.name.split(" ")[0]} vs{" "}
+                    {insightsBlock.clearest.name.split(" ")[0]}
+                  </strong>
+                  <em>
+                    {formatNtu(insightsBlock.gap)} NTU dalam{" "}
+                    {TIME_RANGE_LABELS[timeRange]}
+                  </em>
+                </article>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="analytics-bar-lead">
+              Rata-rata NTU · {TIME_RANGE_LABELS[timeRange]} — bar relatif ke
+              stasiun paling keruh di set yang ditampilkan.
+            </p>
+            <div className="analytics-bar-list">
+              {barRows
+                .filter((row) => !hiddenIds.includes(row.id))
+                .map((row) => (
+                  <div className="analytics-bar-row" key={row.id}>
+                    <div className="analytics-bar-name">
+                      <i style={{ background: row.color }} />
+                      {row.name}
+                    </div>
+                    <div className="analytics-bar-track">
+                      <span
+                        style={{
+                          width: `${Math.max(6, row.pct)}%`,
+                          background: row.color,
+                        }}
+                      />
+                    </div>
+                    <div className="analytics-bar-val">{formatNtu(row.avg)}</div>
+                  </div>
+                ))}
+            </div>
+            {insightsBlock && (
+              <div className="analytics-insight-row">
+                <article>
+                  <label>Ambang 25 NTU</label>
+                  <strong>
+                    {insightsBlock.overThreshold.length} dari {chips.length} di
+                    atas
+                  </strong>
+                  <em
+                    className={
+                      insightsBlock.overThreshold.length ? "is-warn" : "is-good"
+                    }
+                  >
+                    {insightsBlock.overThreshold.length
+                      ? insightsBlock.overThreshold
+                          .map((s) => s.name)
+                          .join(" · ")
+                      : "Semua di bawah ambang"}
+                  </em>
+                </article>
+                <article>
+                  <label>Baseline aktif</label>
+                  <strong>{formatNtu(activeStation.baseline)} NTU</strong>
+                  <em>
+                    Aktual {formatNtu(activeStation.ntu)} ·{" "}
+                    {formatPercent(activeInsight.deviation)} vs baseline
+                  </em>
+                </article>
+                <article>
+                  <label>Rekomendasi</label>
+                  <strong>Cek {insightsBlock.murkiest.name}</strong>
+                  <em>Rata-rata tertinggi di set perbandingan</em>
+                </article>
+              </div>
+            )}
+          </>
+        )}
+
         <p className="analytics-footnote">
-          {overlaySeries.length > 0
-            ? "Garis berwarna adalah stasiun yang dipilih di Perbandingan. Klik kartu di bawah untuk menambah/mengurangi overlay (maks. 3)."
-            : "Anomali ditandai jika deviasi signifikan dari baseline atau pola pembacaan stasiun. Pilih stasiun di bawah untuk menampilkan overlay."}
+          Chip mengontrol tampilan garis saja. Pilih stasiun di kartu bawah untuk
+          menambah/mengurangi set perbandingan (maks. 3).
         </p>
       </section>
 
@@ -293,7 +504,7 @@ export function AnalyticsSection({
           );
           const overlayColor =
             station.id === activeStation.id
-              ? "#1f6b54"
+              ? PRIMARY_COLOR
               : OVERLAY_COLORS[
                   Math.max(
                     0,
@@ -345,8 +556,8 @@ export function AnalyticsSection({
         })}
       </div>
       <p className="analytics-footnote">
-        Pilih 1–3 stasiun. Stasiun aktif (garis hijau tebal) + stasiun terpilih
-        lainnya di-overlay pada grafik di atas.
+        Pilih 1–3 stasiun. Stasiun aktif (hijau) + stasiun terpilih lain muncul di
+        chip dan grafik di atas.
       </p>
 
       <section className="analytics-card analytics-history-card" aria-label="Riwayat">
@@ -361,8 +572,7 @@ export function AnalyticsSection({
             .map((reading) => {
               const water = classifyNtu(reading.ntu);
               const severity = getSeverity(reading.ntu, activeStation.baseline);
-              const isAlert =
-                severity === "high" || severity === "critical";
+              const isAlert = severity === "high" || severity === "critical";
               const tagLabel = isAlert
                 ? `${SEVERITY_META[severity].label} · ${
                     severity ===
